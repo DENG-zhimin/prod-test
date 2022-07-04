@@ -15,11 +15,12 @@
         <q-space></q-space>
 
         <div>
-          <q-btn v-if="currDev.deviceId" flat round size="md" @click="getDev">
-            <i class="material-icons text-blue text-h5">bluetooth</i>
-          </q-btn>
-          <q-btn v-else flat round size="md" @click="getDev">
-            <i class="material-icons text-grey-5 text-h5">bluetooth</i>
+          <q-btn flat round size="md" @click="getDev">
+            <q-icon
+              name="bluetooth"
+              class="text-h5"
+              :color="currDev.deviceId === '' ? 'grey-2' : 'blue-5'"
+            />
           </q-btn>
         </div>
       </q-toolbar>

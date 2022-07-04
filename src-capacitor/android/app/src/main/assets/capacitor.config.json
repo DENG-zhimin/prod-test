@@ -1,0 +1,7 @@
+{
+	"appId": "org.prodTest.aoi.app",
+	"appName": "aoi test",
+	"bundledWebRuntime": false,
+	"npmClient": "npm",
+	"webDir": "www"
+}

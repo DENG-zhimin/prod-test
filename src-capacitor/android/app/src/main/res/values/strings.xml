@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">aoi test</string>
+    <string name="title_activity_main">aoi test</string>
+    <string name="package_name">org.prodTest.aoi.app</string>
+    <string name="custom_url_scheme">org.prodTest.aoi.app</string>
+</resources>

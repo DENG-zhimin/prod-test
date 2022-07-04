@@ -1,0 +1,123 @@
+<template>
+  <q-page class="column bg-grey-3">
+    <title-bar title="设备信息" />
+    <div class="column q-pa-md bg-grey-1">
+      <div class="row justify-center q-my-md">
+        <q-icon class="material-icons text-grey-8 text-h3"> &#xE25F; </q-icon>
+      </div>
+      <div class="row justify-center q-my-sm">
+        {{ devName }}
+      </div>
+      <q-separator></q-separator>
+      <div class="row justify-center q-my-sm">
+        <div class="col row items-center">备注名称：{{ devName }}</div>
+        <div class="col-5 row justify-end items-center">
+          <q-btn
+            outline
+            text-color="grey-8"
+            @click="chgName()"
+            label="修改名称"
+          />
+        </div>
+      </div>
+      <q-separator></q-separator>
+      <div class="row justify-center q-my-sm">
+        <div class="col row items-center">
+          绑定状态：{{ selectDev.bonded ? '是' : '否' }}
+        </div>
+        <div class="col-5 row justify-end items-center">
+          <q-btn
+            v-if="!selectDev.bonded"
+            outline
+            text-color="grey-8"
+            label="绑定"
+          />
+          <!-- @click="bond()" -->
+        </div>
+      </div>
+    </div>
+  </q-page>
+</template>
+
+<script lang="ts">
+import { defineComponent, computed, onBeforeMount } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useRoute } from 'vue-router';
+import { useBleStore } from 'src/stores/ble-store';
+import { useQuasar } from 'quasar';
+
+import TitleBar from 'src/components/TitleBar.vue';
+
+export default defineComponent({
+  name: 'BleDev',
+  components: { TitleBar },
+  setup() {
+    const $q = useQuasar();
+    const route = useRoute();
+    const bleStore = useBleStore();
+    const { cntdDevs, bndDevs, selectDev } = storeToRefs(bleStore);
+
+    const devName = computed(() => {
+      let name = <string>'';
+      if (selectDev.value.lName) {
+        name = selectDev.value.lName;
+      } else {
+        if (selectDev.value.name) {
+          name = selectDev.value.name;
+        } else {
+          name = selectDev.value.deviceId;
+        }
+      }
+      return name;
+    });
+
+    const chgName = () => {
+      // chgNameFlag.value = true;
+      $q.dialog({
+        title: '重命名',
+        // prompt: selectDev.value.lName,
+        prompt: {
+          // model: selectDev.value.lName as string,
+          model: devName.value,
+          type: 'text',
+        },
+        cancel: true,
+        persistent: false,
+      }).onOk((prompt) => {
+        selectDev.value.lName = prompt;
+        bleStore.saveHBCntdDev(selectDev.value);
+      });
+    };
+
+    // const selectDev = ref(<lBleDev | null>{})
+    onBeforeMount(() => {
+      selectDev.value = {};
+      cntdDevs.value.forEach((item) => {
+        if (item.deviceId === route.params.devId) {
+          console.log(route.params.devId);
+          selectDev.value = item;
+          selectDev.value.connected = true;
+        }
+
+        selectDev.value.bonded = false;
+
+        bndDevs.value.forEach((item) => {
+          if (selectDev.value.deviceId === item.deviceId) {
+            selectDev.value.bonded = true;
+          }
+        });
+      });
+      if (selectDev.value.deviceId === undefined) {
+        bndDevs.value.forEach((item) => {
+          if (item.deviceId === route.params.devId) {
+            selectDev.value = item;
+            selectDev.value.bonded = true;
+          }
+        });
+      }
+    });
+
+    return { devName, chgName, selectDev };
+  },
+});
+</script>

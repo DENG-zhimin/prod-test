@@ -7,8 +7,13 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '', component: () => import('pages/IndexPage.vue') },
       { path: 'flash', component: () => import('pages/FlashPage.vue') },
-      { path: 'report', component: () => import('pages/ReportPage.vue') },
+      { path: 'analysis', component: () => import('pages/AnalysisPage.vue') },
       { path: 'ble', component: () => import('pages/BlePage.vue') },
+      {
+        path: 'bledev/:devId',
+        name: 'bledev',
+        component: () => import('pages/BleDev.vue'),
+      },
     ],
   },
 

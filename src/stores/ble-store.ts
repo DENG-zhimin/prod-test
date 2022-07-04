@@ -3,20 +3,37 @@ import {
   BleDevice,
   // BleService,
 } from '@capacitor-community/bluetooth-le';
-// import { LocalStorage as LS } from 'quasar';
+import { LocalStorage as LS } from 'quasar';
 
-const currDev = <BleDevice>{
-  name: '',
-  deviceId: '',
+export type lBleDev = BleDevice & {
+  lName: string | undefined; // local name
+  connected: boolean | undefined;
+  bonded: boolean | undefined;
+};
+
+const currDev = <lBleDev>{
+  name: 'currDev',
+  deviceId: 'a:b:c',
+  lName: '',
 };
 
 export const useBleStore = defineStore('ble', {
   state: () => ({
     currDev,
-    connectedDevs: <BleDevice[]>[],
+    selectDev: <cntBleDev>{},
+    cntdDevs: <lBleDev[]>[],
+    HBCntdDevs: <lBleDev[]>[],
+    bndDevs: <lBleDev[]>[],
   }),
   getters: {},
   actions: {
+    saveHBCntdDev(dev: lBleDev) {
+      LS.set('HBCntdDevs.' + dev.deviceId, dev);
+    },
+    getHBCntdDevs(dev: lBleDev) {
+      LS.getItem('HBCntdDevs.' + dev.deviceId);
+    },
+
     increment() {
       // this.counter++;
     },

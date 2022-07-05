@@ -92,7 +92,7 @@ export const useBleStore = defineStore('ble', {
 
 const updateDevName = (arr: lBleDev[]) => {
   const savedDevs = LS.getItem('HBCntdDevs') as lBleDev[];
-  if (savedDevs.length === 0) return null;
+  if (savedDevs === null && savedDevs.length === 0) return null;
   arr.forEach((item, index) => {
     savedDevs.forEach((el) => {
       if (item.deviceId === el.deviceId) {

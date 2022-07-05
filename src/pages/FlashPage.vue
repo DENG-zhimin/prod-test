@@ -5,23 +5,27 @@
       <q-btn color="green" @click="startTest()" label="开始测试" />
       <q-btn color="negative" @click="stopTest()" label="停止测试" />
     </div>
-    <div class="col-6 row justify-evenly q-my-sm full-width">
+    <!-- <div class="col-6 row justify-evenly q-my-sm full-width">
       <q-btn color="green" @click="startReceive()" label="开始接收" />
       <q-btn color="negative" @click="stopReceive()" label="停止接收" />
-    </div>
+    </div> -->
     <div class="row justify-center">
       <q-input type="number" v-model="freq" />
     </div>
-    <div>
-      <q-list>
-        <q-item v-for="test in testFB" :key="test.time">
-          <q-item-section>{{ test.time }}</q-item-section>
-          <q-item-section>{{ test.fb }}</q-item-section>
-        </q-item>
-      </q-list>
+    <div class="row q-pa-sm full-width justify-center">
+      <div class="row justify-center q-my-sm">
+        <q-list dense>
+          <q-item v-for="test in testFB" :key="test.time">
+            <q-item-section>
+              {{ test.time + ' ' }}
+              {{ test.fb }}
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </div>
     </div>
     <div class="q-pa-sm">
-      {{ testFB }}
+      <!-- {{ testFB }} -->
       {{ error }}
     </div>
   </q-page>
@@ -43,7 +47,7 @@ import { formatTime } from 'src/utils/comm';
 
 type FlashFeedback = {
   time: string;
-  fb: number[];
+  fb: string;
 };
 
 export default defineComponent({
@@ -63,13 +67,18 @@ export default defineComponent({
 
     const bleStore = useBleStore();
 
-    const testFB = <FlashFeedback[]>[];
+    const testFB = ref(<FlashFeedback[]>[
+      { time: 'asksdj', fb: '50' },
+      { time: 'asksdj', fb: '50' },
+      { time: 'asksdj', fb: '50' },
+      { time: 'asksdj', fb: '50' },
+    ]);
 
     const intervalHandle = ref();
 
-    const startReceive = async () => {
+    const startReceive = () => {
       // try {
-      await BleClient.startNotifications(
+      BleClient.startNotifications(
         bleStore.currDev.deviceId,
         bleDev[bleBrand].srvId,
         bleDev[bleBrand].nCharId,
@@ -80,7 +89,7 @@ export default defineComponent({
             time: t,
             fb: fb,
           };
-          testFB.unshift(singleFB);
+          testFB.value.unshift(singleFB);
         }
       );
       // } catch (err) {
@@ -101,6 +110,7 @@ export default defineComponent({
 
     const startTest = () => {
       testFlag.value = true;
+      startReceive();
       intervalHandle.value = setInterval(function () {
         // if (!testFlag.value) return null;
         const comm = flash_test_encode('FLASH');
@@ -110,6 +120,7 @@ export default defineComponent({
     const stopTest = () => {
       testFlag.value = false;
       clearInterval(intervalHandle.value);
+      stopReceive();
     };
     onBeforeMount(() => {
       BleClient.initialize();

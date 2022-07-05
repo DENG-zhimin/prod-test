@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onMounted } from 'vue';
+import { defineComponent, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBleStore, lBleDev } from 'src/stores/ble-store';
 import { storeToRefs } from 'pinia';
@@ -157,6 +157,10 @@ export default defineComponent({
         await getConnDev(); // get system connected devices
       }
       bleStore.updateName();
+    });
+
+    onBeforeUnmount(() => {
+      //
     });
 
     return {

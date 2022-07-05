@@ -89,11 +89,13 @@ export default defineComponent({
           ldev.connected = true;
           bleStore.cntdDevs.push(ldev);
           bleStore.updateName();
-          results.value.forEach((item, index) => {
-            if (item.deviceId === ble.deviceId) {
-              results.value.splice(index, 1);
-            }
-          });
+          if (results.value.length > 0) {
+            results.value.forEach((item, index) => {
+              if (item.deviceId === ble.deviceId) {
+                results.value.splice(index, 1);
+              }
+            });
+          }
           $q.notify({
             message: '设备连接成功',
           });

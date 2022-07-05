@@ -1,9 +1,13 @@
 <template>
   <q-page class="column items-center">
-    <h1>flash testing</h1>
+    <h4>flash testing</h4>
     <div class="col-6 row justify-evenly full-width">
-      <q-btn color="green" @click="start()" label="开始" />
-      <q-btn color="negative" @click="stop()" label="停止" />
+      <q-btn color="green" @click="startTest()" label="开始测试" />
+      <q-btn color="negative" @click="stopTest()" label="停止测试" />
+    </div>
+    <div class="col-6 row justify-evenly q-my-sm full-width">
+      <q-btn color="green" @click="startReceive()" label="开始接收" />
+      <q-btn color="negative" @click="stopReceive()" label="停止接收" />
     </div>
     <div class="row justify-center">
       <q-input type="number" v-model="freq" />
@@ -18,6 +22,7 @@
     </div>
     <div class="q-pa-sm">
       {{ testFB }}
+      {{ error }}
     </div>
   </q-page>
 </template>
@@ -62,59 +67,68 @@ export default defineComponent({
 
     const intervalHandle = ref();
 
-    const bleInit = async () => {
-      try {
-        await BleClient.initialize();
-        // bleEnabled.value = await BleClient.isEnabled();
-        await BleClient.startNotifications(
-          bleStore.currDev.deviceId,
-          bleDev[bleBrand].srvId,
-          bleDev[bleBrand].nCharId,
-          (res) => {
-            let t = formatTime(new Date());
-            let fb = parseNotifications(res);
-            let singleFB = <FlashFeedback>{
-              time: t,
-              fb: fb,
-            };
-            testFB.unshift(singleFB);
-          }
-        );
-      } catch (err) {
-        error.value = (err as Error).message;
-      }
+    const startReceive = async () => {
+      // try {
+      await BleClient.startNotifications(
+        bleStore.currDev.deviceId,
+        bleDev[bleBrand].srvId,
+        bleDev[bleBrand].nCharId,
+        (res) => {
+          let t = formatTime(new Date());
+          let fb = parseNotifications(res);
+          let singleFB = <FlashFeedback>{
+            time: t,
+            fb: fb,
+          };
+          testFB.unshift(singleFB);
+        }
+      );
+      // } catch (err) {
+      //   error.value = (err as Error).message;
+      //   // $q.notify({
+      //   //   message: error.value,
+      //   // });
+      // }
     };
 
-    const start = () => {
+    const stopReceive = () => {
+      BleClient.stopNotifications(
+        bleStore.currDev.deviceId,
+        bleDev[bleBrand].srvId,
+        bleDev[bleBrand].nCharId
+      );
+    };
+
+    const startTest = () => {
       testFlag.value = true;
       intervalHandle.value = setInterval(function () {
         // if (!testFlag.value) return null;
-        $q.notify({
-          message: 'comm sent',
-        });
         const comm = flash_test_encode('FLASH');
         send(comm);
       }, freq.value);
     };
-    const stop = () => {
+    const stopTest = () => {
       testFlag.value = false;
       clearInterval(intervalHandle.value);
     };
     onBeforeMount(() => {
-      // BleClient.initialize();
+      BleClient.initialize();
     });
 
     // receive msg from ble
     onMounted(async () => {
-      bleInit();
+      // bleInit();
     });
 
     return {
       testFB,
       testFlag,
       freq,
-      start,
-      stop,
+      error,
+      startTest,
+      startReceive,
+      stopTest,
+      stopReceive,
     };
   },
 });

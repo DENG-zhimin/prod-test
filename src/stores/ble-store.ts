@@ -78,6 +78,7 @@ export const useBleStore = defineStore('ble', {
           deviceId: '',
         });
       }
+      this.selectDev.connected = false;
       this.cntdDevs.forEach((item, index) => {
         if (item.deviceId === dev.deviceId) {
           this.cntdDevs.splice(index, 1);

@@ -14,6 +14,11 @@ const routes: RouteRecordRaw[] = [
         name: 'bledev',
         component: () => import('pages/BleDev.vue'),
       },
+      {
+        path: 'bleconn',
+        name: 'bleconn',
+        component: () => import('pages/BleConn.vue'),
+      },
     ],
   },
 

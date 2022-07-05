@@ -1,5 +1,5 @@
-import { BleClient } from '@capacitor-community/bluetooth-le';
-import { useBleStore } from 'src/stores/ble-store';
+import { BleClient, BleDevice } from '@capacitor-community/bluetooth-le';
+import { lBleDev, useBleStore } from 'src/stores/ble-store';
 import { useQuasar } from 'quasar';
 import UTF8 from 'utf-8';
 
@@ -8,10 +8,19 @@ const bleStore = useBleStore();
 
 // ble srvid and characteristic for transparent transfer
 const bleDev = {
-  srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
-  characteristicId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write and notify
+  st: {
+    srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
+    wCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write
+    nCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //   notify
+  },
+  dx: {
+    srvId: '0000ffe0-0000-1000-8000-00805f9b34fb',
+    wCharId: '0000ffe1-0000-1000-8000-00805f9b34fb', //  write
+    nCharId: '0000ffe2-0000-1000-8000-00805f9b34fb', //   notify
+  },
 };
 
+const bleBrand = 'dx';
 const send = async (code: DataView) => {
   // check if ble dev been choosed.
   if (!bleStore.currDev.deviceId) {
@@ -23,8 +32,8 @@ const send = async (code: DataView) => {
   // send
   await BleClient.write(
     bleStore.currDev.deviceId,
-    bleDev.srvId,
-    bleDev.characteristicId,
+    bleDev[bleBrand].srvId,
+    bleDev[bleBrand].wCharId,
     code
   );
   // .then(res=>{
@@ -36,8 +45,8 @@ const notify = async () => {
   let msg = '';
   await BleClient.startNotifications(
     currDev.deviceId,
-    bleDev.tc.srvId,
-    bleDev.tc.characteristicId,
+    bleDev[bleBrand].srvId,
+    bleDev[bleBrand].nCharId,
     (resp) => {
       if (resp === null) return null;
       msg = parseNotifications(resp);
@@ -136,4 +145,44 @@ const flash_test_encode = (comm: string) => {
   return dataView;
 };
 
-export { bleDev, encode, flash_test_encode, send, notify, parseNotifications };
+const getConnDev = async function (): lBleDev[] {
+  const devs = <BleDevice>[];
+  await BleClient.getConnectedDevices([]).then((res) => {
+    res.forEach((v) => {
+      devs.push(v);
+    });
+  });
+  return devs;
+  // return [
+  // { name: 'aaa', deviceId: 'asd' },
+  // { name: 'aaabb', deviceId: 'asdewd' },
+  // ];
+};
+
+const connect = async (dev: lBleDev) => {
+  await BleClient.connect(dev.deviceId).then(() => {
+    bleStore.cntdDevs.push(dev);
+  });
+};
+
+const disConnect = async (dev: lBleDev) => {
+  await BleClient.disconnect(dev.deviceId).then(() => {
+    bleStore.cntdDevs.forEach((item, index) => {
+      if (item.deviceId === dev.deviceId) {
+        bleStore.cntdDevs.splice(index, 1);
+      }
+    });
+  });
+};
+
+export {
+  bleDev,
+  encode,
+  flash_test_encode,
+  send,
+  notify,
+  parseNotifications,
+  getConnDev,
+  connect,
+  disConnect,
+};

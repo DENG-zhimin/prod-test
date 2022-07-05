@@ -23,17 +23,31 @@
       <q-separator></q-separator>
       <div class="row justify-center q-my-sm">
         <div class="col row items-center">
-          绑定状态：{{ selectDev.bonded ? '是' : '否' }}
+          连接状态：{{ selectDev.connected ? '是' : '否' }}
         </div>
         <div class="col-5 row justify-end items-center">
           <q-btn
-            v-if="!selectDev.bonded"
+            v-if="selectDev.connected"
             outline
-            text-color="grey-8"
-            label="绑定"
+            color="negative"
+            label="断开"
+            @click="disConnect(selectDev)"
+          />
+          <q-btn
+            v-else
+            outline
+            color="green-8"
+            label="连接"
+            @click="connect(selectDev)"
           />
           <!-- @click="bond()" -->
         </div>
+      </div>
+      <q-separator />
+      <div class="row items-center q-py-md">
+        <q-icon class="outline text-h6 q-mr-sm" name="info_outline" />
+        蓝牙地址：
+        {{ selectDev.deviceId }}
       </div>
     </div>
   </q-page>
@@ -45,6 +59,7 @@ import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
 import { useBleStore } from 'src/stores/ble-store';
 import { useQuasar } from 'quasar';
+import { connect, disConnect } from 'src/utils/ble';
 
 import TitleBar from 'src/components/TitleBar.vue';
 
@@ -55,7 +70,7 @@ export default defineComponent({
     const $q = useQuasar();
     const route = useRoute();
     const bleStore = useBleStore();
-    const { cntdDevs, bndDevs, selectDev } = storeToRefs(bleStore);
+    const { cntdDevs, HBCntdDevs, selectDev } = storeToRefs(bleStore);
 
     const devName = computed(() => {
       let name = <string>'';
@@ -94,21 +109,20 @@ export default defineComponent({
       selectDev.value = {};
       cntdDevs.value.forEach((item) => {
         if (item.deviceId === route.params.devId) {
-          console.log(route.params.devId);
           selectDev.value = item;
           selectDev.value.connected = true;
         }
 
         selectDev.value.bonded = false;
 
-        bndDevs.value.forEach((item) => {
+        HBCntdDevs.value.forEach((item) => {
           if (selectDev.value.deviceId === item.deviceId) {
             selectDev.value.bonded = true;
           }
         });
       });
       if (selectDev.value.deviceId === undefined) {
-        bndDevs.value.forEach((item) => {
+        HBCntdDevs.value.forEach((item) => {
           if (item.deviceId === route.params.devId) {
             selectDev.value = item;
             selectDev.value.bonded = true;
@@ -117,7 +131,7 @@ export default defineComponent({
       }
     });
 
-    return { devName, chgName, selectDev };
+    return { devName, chgName, selectDev, connect, disConnect };
   },
 });
 </script>

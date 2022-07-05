@@ -5,16 +5,25 @@
       <div class="q-px-sm bg-white">
         <div class="column text-body-2 text-bold text-primary">选定设备</div>
         <q-separator></q-separator>
-        <div class="row items-center">
+        <div class="row items-center q-pa-sm">
           {{ currDevName }}
           <q-space></q-space>
           <div v-if="currDevName">
             <q-separator vertical />
             <q-btn flat @click="cleanCurrDev()">
               <!-- <q-icon name="settings" /> -->
-              <span class="text-h4" style="transform: Rotate(45deg)">+</span>
+              <q-icon
+                class="text-h4"
+                name="clear"
+                style="transform: Rotate(0deg)"
+              ></q-icon>
             </q-btn>
           </div>
+        </div>
+        <q-separator></q-separator>
+        <div class="row items-center q-pa-sm" @click="goBleConn()">
+          <q-icon size="sm" class="q-mr-sm" name="add_circle_outline"></q-icon>
+          连接新设备
         </div>
       </div>
       <div class="q-px-sm bg-white">
@@ -28,7 +37,7 @@
         >
           <span class="material-icons text-h6 q-mr-sm">&#xE25F; </span>
           <span @click="setCurrDev(dev)" style="cursor: pointer">
-            {{ dev.name }}
+            {{ dev.lName ? dev.lName : dev.name ? dev.name : dev.deviceId }}
           </span>
           <q-space></q-space>
           <q-separator vertical />
@@ -38,16 +47,18 @@
         </q-list>
       </div>
       <div class="q-px-sm bg-white">
-        <div class="column text-body-2 text-bold text-primary">已绑定设备</div>
+        <div class="column text-body-2 text-bold text-primary">
+          之前连接设备
+        </div>
         <q-separator></q-separator>
         <q-list
           separator
           class="row items-center q-pa-xs"
-          v-for="dev in bndDevs"
+          v-for="dev in recentDevs"
           :key="dev.deviceId"
         >
           <span class="material-icons text-h6 q-mr-sm">&#xE25F; </span>
-          {{ dev.name }}
+          {{ dev.lName ? dev.lName : dev.name ? dev.name : dev.deviceId }}
           <q-space></q-space>
           <q-separator vertical />
           <q-btn flat @click="goBleDev(dev)">
@@ -60,14 +71,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
+import { defineComponent, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBleStore, lBleDev } from 'src/stores/ble-store';
 import { storeToRefs } from 'pinia';
-// import { BleClient } from '@capacitor-community/bluetooth-le';
 import { useQuasar } from 'quasar';
+// import { getConnDev } from 'src/utils/ble';
 
 import TitleBar from 'src/components/TitleBar.vue';
+import { BleClient } from '@capacitor-community/bluetooth-le';
 
 export default defineComponent({
   name: 'BlePage',
@@ -77,7 +89,7 @@ export default defineComponent({
     const bleStore = useBleStore();
     const $q = useQuasar();
 
-    const { currDev, cntdDevs, bndDevs } = storeToRefs(bleStore);
+    const { currDev, cntdDevs, HBCntdDevs } = storeToRefs(bleStore);
     const isAndroid: boolean | undefined = $q.platform.is.android;
 
     const currDevName = computed(() => {
@@ -88,20 +100,25 @@ export default defineComponent({
         : currDev.value.deviceId;
     });
 
-    cntdDevs.value = <lBleDev[]>[
-      { name: 'aaa', deviceId: 'abcd' },
-      { name: '', deviceId: 'aabbb' },
-      { name: 'ccc', deviceId: 'cccdd' },
-    ];
-
-    bndDevs.value = <lBleDev[]>[
-      { name: 'aaa', deviceId: 'abcd' },
-      { name: 'eee', deviceId: 'eeee' },
-      { name: 'fff', deviceId: 'ffff' },
-    ];
+    const recentDevs = computed(() => {
+      const arr = <lBleDev[]>[];
+      HBCntdDevs.value.forEach((item, index) => {
+        let isRecent = 1;
+        cntdDevs.value.forEach((el) => {
+          if (item.deviceId === el.deviceId) {
+            isRecent = 0;
+          }
+        });
+        if (isRecent === 1) {
+          arr.push(HBCntdDevs.value[index]);
+        }
+      });
+      return arr;
+    });
 
     const setCurrDev = (dev: lBleDev) => {
-      currDev.value = dev;
+      let tmpDev = JSON.stringify(dev);
+      currDev.value = JSON.parse(tmpDev) as lBleDev;
     };
 
     const cleanCurrDev = () => {
@@ -116,15 +133,43 @@ export default defineComponent({
       router.push({ name: 'bledev', params: { devId: dev.deviceId } });
     };
 
+    const goBleConn = () => {
+      router.push({
+        name: 'bleconn',
+      });
+    };
+
+    // get connected devs and update pinia
+    const getConnDev = async () => {
+      cntdDevs.value.length = 0;
+      await BleClient.getConnectedDevices([]).then((res) => {
+        res.forEach((v) => {
+          let ldev = <lBleDev>v;
+          ldev.connected = true;
+          cntdDevs.value.push(ldev);
+        });
+      });
+    };
+
+    onMounted(async () => {
+      if ($q.platform.is.mobile === true) {
+        await BleClient.initialize();
+        await getConnDev(); // get system connected devices
+      }
+      bleStore.updateName();
+    });
+
     return {
       currDevName,
       isAndroid,
       currDev,
       cntdDevs,
-      bndDevs,
+      HBCntdDevs,
+      recentDevs,
       goBleDev,
       setCurrDev,
       cleanCurrDev,
+      goBleConn,
     };
   },
 });

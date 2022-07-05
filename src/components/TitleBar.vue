@@ -1,5 +1,5 @@
 <template>
-  <q-bar class="bg-grey-5 q-pa-none q-mb-sm">
+  <q-bar :class="barBGC">
     <q-btn dense flat size="md" @click="goback()">
       <q-icon name="arrow_back" color="primary" />
     </q-btn>
@@ -14,15 +14,19 @@ import { useRouter } from 'vue-router';
 export default defineComponent({
   name: 'TitleBar',
   components: {},
-  props: ['title'],
-  setup() {
+  props: {
+    title: { type: String, default: '', required: true },
+    bgColor: { type: String, default: 'bg-grey-5', required: false },
+  },
+  setup(props) {
     const router = useRouter();
+    const barBGC = 'q-pa-none q-mb-sm ' + props.bgColor;
 
     const goback = () => {
       router.back();
     };
 
-    return { goback };
+    return { goback, barBGC };
   },
 });
 </script>

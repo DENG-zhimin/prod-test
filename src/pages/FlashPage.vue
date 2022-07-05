@@ -1,5 +1,5 @@
 <template>
-  <q-page class="column items-center bg-green-4">
+  <q-page class="column items-center">
     <h1>flash testing</h1>
     <div class="col-6 row justify-evenly full-width">
       <q-btn color="green" @click="testFlag = true" label="开始" />

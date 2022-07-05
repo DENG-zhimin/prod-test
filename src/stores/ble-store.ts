@@ -29,7 +29,7 @@ const HBCntdDevs = LS.getItem('HBCntdDevs');
 export const useBleStore = defineStore('ble', {
   state: () => ({
     currDev,
-    selectDev: <cntBleDev>{},
+    selectDev: <lBleDev>{},
     cntdDevs: <lBleDev[]>[
       { name: 'aaa', deviceId: 'abcd', connected: true },
       { name: 'bbb', deviceId: 'aabbb', connected: true },

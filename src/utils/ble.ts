@@ -20,7 +20,7 @@ const bleDev = {
   },
 };
 
-const bleBrand = 'dx';
+export const bleBrand = 'dx';
 const send = async (code: DataView) => {
   // check if ble dev been choosed.
   if (!bleStore.currDev.deviceId) {

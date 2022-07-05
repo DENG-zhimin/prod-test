@@ -86,8 +86,12 @@ export default defineComponent({
         .then(() => {
           // ctx.emit('bleConnected', ble);
           const ldev = <lBleDev>ble;
+          ldev.connected = true;
           bleStore.cntdDevs.push(ldev);
           bleStore.updateName();
+          $q.notify({
+            message: '设备连接成功',
+          });
         })
         .catch((e: Error) => {
           $q.notify({

@@ -106,7 +106,7 @@ export default defineComponent({
 
     // const selectDev = ref(<lBleDev | null>{})
     onBeforeMount(() => {
-      selectDev.value = {};
+      Object.assign(selectDev.value, { name: '', lName: '', deviceId: '' });
       cntdDevs.value.forEach((item) => {
         if (item.deviceId === route.params.devId) {
           selectDev.value = item;

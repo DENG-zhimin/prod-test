@@ -1,7 +1,7 @@
 import { BleClient, BleDevice } from '@capacitor-community/bluetooth-le';
 import { lBleDev, useBleStore } from 'src/stores/ble-store';
 import { useQuasar } from 'quasar';
-import UTF8 from 'utf-8';
+// import UTF8 from 'utf-8';
 
 const $q = useQuasar();
 const bleStore = useBleStore();
@@ -56,13 +56,14 @@ const notify = async () => {
 };
 
 // parse ble feedback dataview to string by utf-8 encoding
-const parseNotifications = (data: DataView) => {
+const parseNotifications = function (data: DataView): number[] {
   // const retMsg = <number[]>[];
   const arr = <number[]>[];
   for (let i = 0; i < data.byteLength; i++) {
     arr.push(data.getUint8(i));
   }
-  const ret = UTF8.getStringFromBytes(arr);
+  // const ret = UTF8.getStringFromBytes(arr);
+  const ret = arr;
   return ret;
 };
 

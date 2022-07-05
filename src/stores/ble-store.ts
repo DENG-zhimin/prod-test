@@ -68,7 +68,9 @@ export const useBleStore = defineStore('ble', {
       LS.set('HBCntdDevs', savedDevs);
     },
     updateName() {
-      this.cntdDevs = updateDevName(this.cntdDevs);
+      if (this.cntdDevs.length > 0) {
+        this.cntdDevs = updateDevName(this.cntdDevs);
+      }
     },
     disconnect(dev: BleDevice) {
       if (this.currDev.deviceId === dev.deviceId) {
@@ -89,7 +91,8 @@ export const useBleStore = defineStore('ble', {
 });
 
 const updateDevName = (arr: lBleDev[]) => {
-  const savedDevs = LS.getItem('HBCntdDevs');
+  const savedDevs = LS.getItem('HBCntdDevs') as lBleDev[];
+  if (savedDevs.length === 0) return null;
   arr.forEach((item, index) => {
     savedDevs.forEach((el) => {
       if (item.deviceId === el.deviceId) {

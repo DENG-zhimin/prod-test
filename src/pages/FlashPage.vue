@@ -43,7 +43,7 @@ import { formatTime } from 'src/utils/comm';
 
 type FlashFeedback = {
   time: string;
-  fb: number;
+  fb: number[];
 };
 
 export default defineComponent({

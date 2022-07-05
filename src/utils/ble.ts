@@ -137,11 +137,11 @@ const flash_test_encode = (comm: string) => {
   // get cs value
   // const cs =
   //   header + commVal + param1 + param2 + param3 + param4 + param5 + param6;
-  const buf = new ArrayBuffer(9);
+  const buf = new ArrayBuffer(3);
   const dataView = new DataView(buf);
   dataView.setUint8(0, header1);
-  dataView.setUint8(0, header2);
-  dataView.setUint8(1, commVal);
+  dataView.setUint8(1, header2);
+  dataView.setUint8(2, commVal);
   return dataView;
 };
 

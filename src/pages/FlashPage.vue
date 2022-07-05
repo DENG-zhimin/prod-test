@@ -2,13 +2,23 @@
   <q-page class="column items-center">
     <h1>flash testing</h1>
     <div class="col-6 row justify-evenly full-width">
-      <q-btn color="green" @click="testFlag = true" label="开始" />
-      <q-btn color="negative" @click="testFlag = false" label="停止" />
+      <q-btn color="green" @click="start()" label="开始" />
+      <q-btn color="negative" @click="stop()" label="停止" />
     </div>
     <div class="row justify-center">
       <q-input type="number" v-model="freq" />
     </div>
-    {{ testFB }}
+    <div>
+      <q-list>
+        <q-item v-for="test in testFB" :key="test.time">
+          <q-item-section>{{ test.time }}</q-item-section>
+          <q-item-section>{{ test.fb }}</q-item-section>
+        </q-item>
+      </q-list>
+    </div>
+    <div class="q-pa-sm">
+      {{ testFB }}
+    </div>
   </q-page>
 </template>
 <script lang="ts">
@@ -50,6 +60,8 @@ export default defineComponent({
 
     const testFB = <FlashFeedback[]>[];
 
+    const intervalHandle = ref();
+
     const bleInit = async () => {
       try {
         await BleClient.initialize();
@@ -75,22 +87,26 @@ export default defineComponent({
 
     const start = () => {
       testFlag.value = true;
+      intervalHandle.value = setInterval(function () {
+        // if (!testFlag.value) return null;
+        $q.notify({
+          message: 'comm sent',
+        });
+        const comm = flash_test_encode('FLASH');
+        send(comm);
+      }, freq.value);
     };
     const stop = () => {
       testFlag.value = false;
+      clearInterval(intervalHandle.value);
     };
     onBeforeMount(() => {
-      BleClient.initialize();
+      // BleClient.initialize();
     });
 
     // receive msg from ble
     onMounted(async () => {
       bleInit();
-      setInterval(() => {
-        if (!testFlag.value) return null;
-        const comm = flash_test_encode('FLASH');
-        send(comm);
-      }, freq.value);
     });
 
     return {

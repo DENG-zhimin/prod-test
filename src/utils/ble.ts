@@ -172,7 +172,9 @@ const disConnect = async (dev: lBleDev) => {
         bleStore.cntdDevs.splice(index, 1);
       }
     });
+    return true;
   });
+  return false;
 };
 
 export {

@@ -31,7 +31,7 @@
             outline
             color="negative"
             label="断开"
-            @click="disConnect(selectDev)"
+            @click="fireDisConnect(selectDev)"
           />
           <q-btn
             v-else
@@ -57,7 +57,7 @@
 import { defineComponent, computed, onBeforeMount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
-import { useBleStore } from 'src/stores/ble-store';
+import { lBleDev, useBleStore } from 'src/stores/ble-store';
 import { useQuasar } from 'quasar';
 import { connect, disConnect } from 'src/utils/ble';
 
@@ -104,6 +104,13 @@ export default defineComponent({
       });
     };
 
+    const fireDisConnect = async (dev: lBleDev) => {
+      const disc = await disConnect(dev);
+      if (disc === true) {
+        selectDev.value.connected = false;
+      }
+    };
+
     // const selectDev = ref(<lBleDev | null>{})
     onBeforeMount(() => {
       Object.assign(selectDev.value, { name: '', lName: '', deviceId: '' });
@@ -131,7 +138,7 @@ export default defineComponent({
       }
     });
 
-    return { devName, chgName, selectDev, connect, disConnect };
+    return { devName, chgName, selectDev, connect, fireDisConnect };
   },
 });
 </script>

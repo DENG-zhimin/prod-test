@@ -24,20 +24,14 @@ const currDev = <lBleDev>{
 //   { name: 'fff', deviceId: 'ffff' },
 // ];
 
-const HBCntdDevs = LS.getItem('HBCntdDevs');
+const storedDevs = LS.getItem('HBCntdDevs'); // be null when nothing.
+const HBCntdDevs = <lBleDev[]>storedDevs ? storedDevs : [];
 
 export const useBleStore = defineStore('ble', {
   state: () => ({
     currDev,
     selectDev: <lBleDev>{},
-    cntdDevs: <lBleDev[]>[
-      { name: 'aaa', deviceId: 'abcd', connected: true },
-      { name: 'bbb', deviceId: 'aabbb', connected: true },
-      // { name: 'ccc', deviceId: 'cccdd', connected: true },
-      // { name: 'ddd', deviceId: 'ddd', connected: true },
-      // { name: 'eee', deviceId: 'eeee', connected: true },
-      // { name: 'fff', deviceId: 'ffff', connected: true },
-    ],
+    cntdDevs: <lBleDev[]>[],
     HBCntdDevs: <lBleDev[]>HBCntdDevs,
     // bondDevs: <lBleDev[]>bondDevs,
   }),
@@ -92,13 +86,14 @@ export const useBleStore = defineStore('ble', {
 
 const updateDevName = (arr: lBleDev[]) => {
   const savedDevs = LS.getItem('HBCntdDevs') as lBleDev[];
-  if (savedDevs === null && savedDevs.length === 0) return null;
-  arr.forEach((item, index) => {
-    savedDevs.forEach((el) => {
-      if (item.deviceId === el.deviceId) {
-        arr[index].lName = el.lName;
-      }
+  if (savedDevs !== null) {
+    arr.forEach((item, index) => {
+      savedDevs.forEach((el) => {
+        if (item.deviceId === el.deviceId) {
+          arr[index].lName = el.lName;
+        }
+      });
     });
-  });
+  }
   return arr;
 };

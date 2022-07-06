@@ -1,7 +1,28 @@
 <template>
   <q-page class="column items-center">
     <h4>flash testing</h4>
-    <div class="col-6 row justify-evenly full-width">
+    <div class="row full-width justify-evenly q-ma-md">
+      <q-input
+        outlined
+        label="连闪次数"
+        type="number"
+        v-model="continueTimes"
+      />
+      <q-input
+        outlined
+        label="连闪间隔/毫秒"
+        type="number"
+        v-model="continueSilence"
+      />
+      <q-input
+        outlined
+        label="周期间隔/毫秒"
+        type="number"
+        v-model="cycleSilence"
+      />
+    </div>
+    <q-separator inset />
+    <div class="col-6 row justify-evenly full-width q-ma-md">
       <q-btn color="green" @click="startTest()" label="开始测试" />
       <q-btn color="negative" @click="stopTest()" label="停止测试" />
     </div>
@@ -9,16 +30,20 @@
       <q-btn color="green" @click="startReceive()" label="开始接收" />
       <q-btn color="negative" @click="stopReceive()" label="停止接收" />
     </div> -->
-    <div class="row justify-center">
-      <q-input type="number" v-model="freq" />
-    </div>
+    <q-separator></q-separator>
     <div class="row q-pa-sm full-width justify-center">
       <div class="row justify-center q-my-sm">
         <q-list dense>
           <q-item v-for="test in testFB" :key="test.time">
             <q-item-section>
-              {{ test.time + ' ' }}
-              {{ test.fb }}
+              {{
+                ' 序号：' +
+                test.count +
+                '时间：' +
+                test.time.substring(test.time.length, -12) +
+                ' 亮度：' +
+                test.fb
+              }}
             </q-item-section>
           </q-item>
         </q-list>
@@ -48,6 +73,8 @@ import { formatTime } from 'src/utils/comm';
 type FlashFeedback = {
   time: string;
   fb: string;
+  count: number;
+  time2: number;
 };
 
 export default defineComponent({
@@ -61,18 +88,17 @@ export default defineComponent({
     }
 
     const testFlag = ref(false);
-    const freq = ref(1000);
+    const continueTimes = ref(1000);
+    const continueSilence = ref(1000);
+    const cycleSilence = ref(1000);
+
+    const count = ref(0);
 
     const error = ref('');
 
     const bleStore = useBleStore();
 
-    const testFB = ref(<FlashFeedback[]>[
-      { time: 'asksdj', fb: '50' },
-      { time: 'asksdj', fb: '50' },
-      { time: 'asksdj', fb: '50' },
-      { time: 'asksdj', fb: '50' },
-    ]);
+    const testFB = ref(<FlashFeedback[]>[]);
 
     const intervalHandle = ref();
 
@@ -83,13 +109,17 @@ export default defineComponent({
         bleDev[bleBrand].srvId,
         bleDev[bleBrand].nCharId,
         (res) => {
-          let t = formatTime(new Date());
+          let time = new Date();
+          let t = formatTime(time);
           let fb = parseNotifications(res);
           let singleFB = <FlashFeedback>{
             time: t,
+            time2: time.getTime(),
             fb: fb,
+            count: count.value,
           };
           testFB.value.unshift(singleFB);
+          count.value++;
         }
       );
       // } catch (err) {
@@ -111,17 +141,26 @@ export default defineComponent({
     const startTest = () => {
       testFlag.value = true;
       startReceive();
+
       intervalHandle.value = setInterval(function () {
-        // if (!testFlag.value) return null;
-        const comm = flash_test_encode('FLASH');
-        send(comm);
-      }, freq.value);
+        for (let i = 0; i < continueTimes.value; i++) {
+          setTimeout(() => {
+            sendComm();
+          }, continueSilence.value);
+        }
+      }, cycleSilence.value);
     };
     const stopTest = () => {
       testFlag.value = false;
       clearInterval(intervalHandle.value);
       stopReceive();
     };
+
+    const sendComm = async () => {
+      const comm = flash_test_encode('FLASH');
+      await send(comm);
+    };
+
     onBeforeMount(() => {
       BleClient.initialize();
     });
@@ -134,7 +173,9 @@ export default defineComponent({
     return {
       testFB,
       testFlag,
-      freq,
+      continueTimes,
+      continueSilence,
+      cycleSilence,
       error,
       startTest,
       startReceive,

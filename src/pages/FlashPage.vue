@@ -191,14 +191,18 @@ export default defineComponent({
       // bleInit();
     });
 
-    watch(continueSilence, (newVal: number, oldVal: number) => {
+    watch(continueSilence, (newVal: number) => {
       if (newVal < 500 && newVal !== 0) {
-        continueSilence.value = oldVal;
+        continueSilence.value = 500;
+      } else {
+        continueSilence.value = Math.floor(continueSilence.value);
       }
     });
-    watch(cycleSilence, (newVal: number, oldVal: number) => {
+    watch(cycleSilence, (newVal: number) => {
       if (newVal < 500) {
-        cycleSilence.value = oldVal;
+        cycleSilence.value = 500;
+      } else {
+        cycleSilence.value = Math.floor(cycleSilence.value);
       }
     });
     watch(continueTimes, (newVal: number, oldVal: number) => {
@@ -206,6 +210,8 @@ export default defineComponent({
         continueTimes.value = oldVal;
       } else if (newVal === 1) {
         continueSilence.value = 0;
+      } else {
+        continueTimes.value = Math.floor(continueTimes.value);
       }
     });
 

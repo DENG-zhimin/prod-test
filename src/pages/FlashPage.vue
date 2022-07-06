@@ -192,7 +192,7 @@ export default defineComponent({
     });
 
     watch(continueSilence, (newVal: number, oldVal: number) => {
-      if (newVal < 500) {
+      if (newVal < 500 && newVal !== 0) {
         continueSilence.value = oldVal;
       }
     });
@@ -204,6 +204,8 @@ export default defineComponent({
     watch(continueTimes, (newVal: number, oldVal: number) => {
       if (newVal < 1) {
         continueTimes.value = oldVal;
+      } else if (newVal === 1) {
+        continueSilence.value = 0;
       }
     });
 

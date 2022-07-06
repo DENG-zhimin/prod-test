@@ -111,6 +111,8 @@ export default defineComponent({
       },
     ];
 
+    bleModule.value = bleModules[0].value;
+
     const devName = computed(() => {
       let name = <string>'';
       if (selectDev.value.lName) {

@@ -117,8 +117,14 @@ export default defineComponent({
     });
 
     const setCurrDev = (dev: lBleDev) => {
-      let tmpDev = JSON.stringify(dev);
-      currDev.value = JSON.parse(tmpDev) as lBleDev;
+      if (!dev.deviceId === currDev.value.deviceId) {
+        let tmpDev = JSON.stringify(dev);
+        currDev.value = JSON.parse(tmpDev) as lBleDev;
+      } else {
+        $q.notify({
+          message: '已选择该设备。',
+        });
+      }
     };
 
     const cleanCurrDev = () => {

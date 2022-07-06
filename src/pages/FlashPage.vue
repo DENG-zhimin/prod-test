@@ -1,20 +1,26 @@
 <template>
   <q-page class="column items-center">
-    <h4>flash testing</h4>
+    <div class="text-h4 q-my-md">Flash Test</div>
     <div class="row full-width justify-evenly q-ma-md">
       <q-input
+        class="col-3"
+        dense
         outlined
         label="连闪次数"
         type="number"
         v-model="continueTimes"
       />
       <q-input
+        class="col-3"
+        dense
         outlined
         label="连闪间隔/毫秒"
         type="number"
         v-model="continueSilence"
       />
       <q-input
+        class="col-3"
+        dense
         outlined
         label="周期间隔/毫秒"
         type="number"
@@ -23,7 +29,12 @@
     </div>
     <q-separator inset />
     <div class="col-6 row justify-evenly full-width q-ma-md">
-      <q-btn color="green" @click="startTest()" label="开始测试" />
+      <q-btn
+        color="green"
+        :disable="testFlag"
+        @click.once="startTest()"
+        label="开始测试"
+      />
       <q-btn color="negative" @click="stopTest()" label="停止测试" />
     </div>
     <!-- <div class="col-6 row justify-evenly q-my-sm full-width">
@@ -40,7 +51,7 @@
                 ' 序号：' +
                 test.count +
                 '时间：' +
-                test.time.substring(test.time.length, -12) +
+                test.time.substring(test.time.length - 12) +
                 ' 亮度：' +
                 test.fb
               }}
@@ -88,7 +99,7 @@ export default defineComponent({
     }
 
     const testFlag = ref(false);
-    const continueTimes = ref(1000);
+    const continueTimes = ref(1);
     const continueSilence = ref(1000);
     const cycleSilence = ref(1000);
 

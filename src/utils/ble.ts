@@ -1,9 +1,9 @@
 import { BleClient, BleDevice } from '@capacitor-community/bluetooth-le';
 import { lBleDev, useBleStore } from 'src/stores/ble-store';
-import { useQuasar } from 'quasar';
+// import { useQuasar } from 'quasar';
 import UTF8 from 'utf-8';
 
-const $q = useQuasar();
+// const $q = useQuasar();
 const bleStore = useBleStore();
 
 // ble srvid and characteristic for transparent transfer
@@ -24,9 +24,9 @@ const bleStore = useBleStore();
 const send = async (code: DataView) => {
   // check if ble dev been choosed.
   if (!bleStore.currDev.deviceId) {
-    $q.notify({
-      message: 'Please choose a device first.',
-    });
+    // $q.notify({
+    //   message: 'Please choose a device first.',
+    // });
     return null;
   }
   // send

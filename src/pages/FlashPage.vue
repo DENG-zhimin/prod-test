@@ -28,11 +28,18 @@
       />
     </div>
     <q-separator inset />
-    <div class="col-6 row justify-evenly full-width q-ma-md">
+    <div class="row justify-evenly full-width q-ma-md">
+      <q-input dense outlined label="阀值" type="number" v-model="threshold" />
+      <q-radio v-model="enableThreshold" val="1" label="是" />
+      <q-radio v-model="enableThreshold" val="0" label="否" />
+    </div>
+    <q-separator inset />
+    <div class="row justify-evenly full-width q-ma-md">
       <div class="col-6 row items-center bg-grey-7 text-white q-px-xs">
-        <div class="col-6">发送：{{ sendCount }}</div>
-        <div class="col-6">收到： {{ receiveCount }}</div>
+        <div class="col-6">{{ sendCount }}</div>
+        <div class="col-6">{{ receiveCount }}</div>
       </div>
+
       <q-btn
         color="green"
         :disable="testFlag"
@@ -45,6 +52,10 @@
       <q-btn color="green" @click="startReceive()" label="开始接收" />
       <q-btn color="negative" @click="stopReceive()" label="停止接收" />
     </div> -->
+    <q-separator></q-separator>
+    <div class="row q-pa-sm full-width justify-center">
+      {{ cycle }}
+    </div>
     <q-separator></q-separator>
     <div class="row q-pa-sm full-width justify-center">
       <div class="row justify-center q-my-sm">
@@ -95,7 +106,7 @@ export default defineComponent({
       // keep awake
       KeepAwake.keepAwake();
     }
-
+    const cycle = ref(<number[]>[]);
     const testFlag = ref(false);
     const continueTimes = ref(1);
     const continueSilence = ref(1000);
@@ -105,6 +116,11 @@ export default defineComponent({
     const receiveCount = ref(0);
 
     const error = ref('');
+
+    const enableThreshold = ref('1');
+    const threshold = ref(5);
+
+    const ret = ref(0);
 
     const bleStore = useBleStore();
     // const { ble = storeToRefs(bleStore);
@@ -124,6 +140,7 @@ export default defineComponent({
           let time = new Date();
           let t = formatTime(time);
           let fb = parseNotifications(res);
+          ret.value = parseInt(fb);
           let singleFB = <FlashFeedback>{
             time: t,
             time2: time.getTime(),
@@ -149,26 +166,45 @@ export default defineComponent({
       );
     };
 
-    const startTest = () => {
+    const startTest = async () => {
       testFlag.value = true;
       startReceive();
-      console.log(continueSilence.value);
-      const cycleTime =
-        continueTimes.value * continueSilence.value + cycleSilence.value * 1; // value changed to string after input.
-      intervalHandle.value = setInterval(() => {
-        for (let i = 0; i < continueTimes.value; i++) {
-          sleep(continueSilence.value);
-          sendComm();
-        }
-      }, cycleTime);
+      // const s = new Promise((resolve) => {
+      cycleSend(continueTimes.value, cycleSilence.value, continueSilence.value);
+      // resolve('res');
+      // });
+      // console.log(s);
     };
 
-    const sleep = (delay: number) => {
+    const sleep = function (delay: number) {
       const start = new Date().getTime();
       while (new Date().getTime() - start < delay) {
         continue;
       }
     };
+
+    const cycleSend = function (
+      continueTimes: number,
+      cycle: number,
+      continued: number
+    ) {
+      intervalHandle.value = setInterval(() => {
+        let i = 0;
+        while (i < continueTimes) {
+          sendComm();
+          i++;
+          sleep(continued);
+          if (enableThreshold.value === '1' && ret.value < threshold.value) {
+            break;
+          }
+        }
+        sleep(cycle);
+      }, continued);
+    };
+
+    // const sleep = (delay: number) => {
+    //   return new Promise((resolve) => setTimeout(resolve, delay));
+    // };
 
     const stopTest = () => {
       testFlag.value = false;
@@ -176,9 +212,9 @@ export default defineComponent({
       stopReceive();
     };
 
-    const sendComm = async () => {
+    const sendComm = () => {
       const comm = flash_test_encode('FLASH');
-      await send(comm);
+      send(comm);
       sendCount.value++;
     };
 
@@ -192,7 +228,9 @@ export default defineComponent({
     });
 
     watch(continueSilence, (newVal: number) => {
-      if (newVal < 500 && newVal !== 0) {
+      if (newVal === 0) {
+        continueSilence.value = 0;
+      } else if (newVal < 500) {
         continueSilence.value = 500;
       } else {
         continueSilence.value = Math.floor(continueSilence.value);
@@ -212,10 +250,16 @@ export default defineComponent({
         continueSilence.value = 0;
       } else {
         continueTimes.value = Math.floor(continueTimes.value);
+        if (continueSilence.value < 500) {
+          continueSilence.value = 500;
+        }
       }
     });
 
     return {
+      enableThreshold,
+      threshold,
+      cycle,
       sendCount,
       receiveCount,
       testFB,

@@ -29,13 +29,17 @@
     </div>
     <q-separator inset />
     <div class="col-6 row justify-evenly full-width q-ma-md">
+      <div class="col-6 row items-center bg-grey-7 text-white q-px-xs">
+        <div class="col-6">发送：{{ sendCount }}</div>
+        <div class="col-6">收到： {{ receiveCount }}</div>
+      </div>
       <q-btn
         color="green"
         :disable="testFlag"
         @click="startTest()"
-        label="开始测试"
+        label="开始"
       />
-      <q-btn color="negative" @click="stopTest()" label="停止测试" />
+      <q-btn color="negative" @click="stopTest()" label="停止" />
     </div>
     <!-- <div class="col-6 row justify-evenly q-my-sm full-width">
       <q-btn color="green" @click="startReceive()" label="开始接收" />
@@ -103,7 +107,8 @@ export default defineComponent({
     const continueSilence = ref(1000);
     const cycleSilence = ref(1000);
 
-    const count = ref(0);
+    const sendCount = ref(0);
+    const receiveCount = ref(0);
 
     const error = ref('');
 
@@ -120,6 +125,7 @@ export default defineComponent({
         bleDev[bleBrand].srvId,
         bleDev[bleBrand].nCharId,
         (res) => {
+          receiveCount.value++;
           let time = new Date();
           let t = formatTime(time);
           let fb = parseNotifications(res);
@@ -127,10 +133,9 @@ export default defineComponent({
             time: t,
             time2: time.getTime(),
             fb: fb,
-            count: count.value,
+            count: receiveCount.value,
           };
           testFB.value.unshift(singleFB);
-          count.value++;
         }
       );
       // } catch (err) {
@@ -153,14 +158,22 @@ export default defineComponent({
       testFlag.value = true;
       startReceive();
 
-      intervalHandle.value = setInterval(function () {
+      while (testFlag.value === true) {
         for (let i = 0; i < continueTimes.value; i++) {
-          setTimeout(() => {
-            sendComm();
-          }, continueSilence.value);
+          sleep(continueSilence.value);
+          sendComm();
         }
-      }, cycleSilence.value);
+        sleep(cycleSilence.value);
+      }
     };
+
+    const sleep = (delay: number) => {
+      const start = new Date().getTime();
+      while (new Date().getTime() - start < delay) {
+        continue;
+      }
+    };
+
     const stopTest = () => {
       testFlag.value = false;
       clearInterval(intervalHandle.value);
@@ -170,6 +183,7 @@ export default defineComponent({
     const sendComm = async () => {
       const comm = flash_test_encode('FLASH');
       await send(comm);
+      sendCount.value++;
     };
 
     onBeforeMount(() => {
@@ -182,6 +196,8 @@ export default defineComponent({
     });
 
     return {
+      sendCount,
+      receiveCount,
       testFB,
       testFlag,
       continueTimes,

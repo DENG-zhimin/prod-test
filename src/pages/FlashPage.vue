@@ -71,16 +71,10 @@
   </q-page>
 </template>
 <script lang="ts">
-import { ref, defineComponent, onMounted, onBeforeMount } from 'vue';
+import { ref, defineComponent, onMounted, onBeforeMount, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { KeepAwake } from '@capacitor-community/keep-awake';
-import {
-  send,
-  parseNotifications,
-  bleDev,
-  bleBrand,
-  flash_test_encode,
-} from 'src/utils/ble';
+import { send, parseNotifications, flash_test_encode } from 'src/utils/ble';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 import { useBleStore } from 'src/stores/ble-store';
 import { formatTime } from 'src/utils/comm';
@@ -113,6 +107,7 @@ export default defineComponent({
     const error = ref('');
 
     const bleStore = useBleStore();
+    // const { ble = storeToRefs(bleStore);
 
     const testFB = ref(<FlashFeedback[]>[]);
 
@@ -122,8 +117,8 @@ export default defineComponent({
       // try {
       BleClient.startNotifications(
         bleStore.currDev.deviceId,
-        bleDev[bleBrand].srvId,
-        bleDev[bleBrand].nCharId,
+        bleStore.bleModule.srvId,
+        bleStore.bleModule.nCharId,
         (res) => {
           receiveCount.value++;
           let time = new Date();
@@ -149,22 +144,23 @@ export default defineComponent({
     const stopReceive = () => {
       BleClient.stopNotifications(
         bleStore.currDev.deviceId,
-        bleDev[bleBrand].srvId,
-        bleDev[bleBrand].nCharId
+        bleStore.bleModule.srvId,
+        bleStore.bleModule.nCharId
       );
     };
 
     const startTest = () => {
       testFlag.value = true;
       startReceive();
-
-      while (testFlag.value === true) {
+      console.log(continueSilence.value);
+      const cycleTime =
+        continueTimes.value * continueSilence.value + cycleSilence.value * 1; // value changed to string after input.
+      intervalHandle.value = setInterval(() => {
         for (let i = 0; i < continueTimes.value; i++) {
           sleep(continueSilence.value);
           sendComm();
         }
-        sleep(cycleSilence.value);
-      }
+      }, cycleTime);
     };
 
     const sleep = (delay: number) => {
@@ -193,6 +189,22 @@ export default defineComponent({
     // receive msg from ble
     onMounted(async () => {
       // bleInit();
+    });
+
+    watch(continueSilence, (newVal: number, oldVal: number) => {
+      if (newVal < 500) {
+        continueSilence.value = oldVal;
+      }
+    });
+    watch(cycleSilence, (newVal: number, oldVal: number) => {
+      if (newVal < 500) {
+        cycleSilence.value = oldVal;
+      }
+    });
+    watch(continueTimes, (newVal: number, oldVal: number) => {
+      if (newVal < 1) {
+        continueTimes.value = oldVal;
+      }
     });
 
     return {

@@ -49,6 +49,19 @@
         蓝牙地址：
         {{ selectDev.deviceId }}
       </div>
+      <q-separator />
+      <div class="row q-py-md items-center">
+        <span class="q-mr-sm">方案：</span>
+        <q-select
+          dense
+          outlined
+          v-model="bleModule"
+          :options="bleModules"
+          map-options
+          emit-value
+        />
+        <!-- @update:model-value="onModuleChange" -->
+      </div>
     </div>
   </q-page>
 </template>
@@ -57,11 +70,16 @@
 import { defineComponent, computed, onBeforeMount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
-import { lBleDev, useBleStore } from 'src/stores/ble-store';
+import { lBleDev, useBleStore, BleSrv } from 'src/stores/ble-store';
 import { useQuasar } from 'quasar';
 import { connect, disConnect } from 'src/utils/ble';
 
 import TitleBar from 'src/components/TitleBar.vue';
+
+type BleModule = {
+  label: string;
+  value: BleSrv;
+};
 
 export default defineComponent({
   name: 'BleDev',
@@ -70,7 +88,28 @@ export default defineComponent({
     const $q = useQuasar();
     const route = useRoute();
     const bleStore = useBleStore();
-    const { cntdDevs, HBCntdDevs, selectDev } = storeToRefs(bleStore);
+    const { bleModule, cntdDevs, HBCntdDevs, selectDev } =
+      storeToRefs(bleStore);
+
+    const bleModules = <BleModule[]>[
+      {
+        label: 'st',
+        value: {
+          srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
+          wCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write
+          nCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //   notify
+        },
+      },
+      {
+        label: 'dx',
+        value: {
+          // dx: 大熊智能
+          srvId: '0000ffe0-0000-1000-8000-00805f9b34fb',
+          wCharId: '0000ffe1-0000-1000-8000-00805f9b34fb', //  write
+          nCharId: '0000ffe2-0000-1000-8000-00805f9b34fb', //   notify
+        },
+      },
+    ];
 
     const devName = computed(() => {
       let name = <string>'';
@@ -138,7 +177,15 @@ export default defineComponent({
       }
     });
 
-    return { devName, chgName, selectDev, connect, fireDisConnect };
+    return {
+      bleModule,
+      bleModules,
+      devName,
+      chgName,
+      selectDev,
+      connect,
+      fireDisConnect,
+    };
   },
 });
 </script>

@@ -7,20 +7,20 @@ const $q = useQuasar();
 const bleStore = useBleStore();
 
 // ble srvid and characteristic for transparent transfer
-const bleDev = {
+/* const bleDev = {
   st: {
     srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
     wCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write
     nCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //   notify
   },
   dx: {
+    // dx: 大熊智能
     srvId: '0000ffe0-0000-1000-8000-00805f9b34fb',
     wCharId: '0000ffe1-0000-1000-8000-00805f9b34fb', //  write
     nCharId: '0000ffe2-0000-1000-8000-00805f9b34fb', //   notify
   },
-};
+}; */
 
-export const bleBrand = 'dx';
 const send = async (code: DataView) => {
   // check if ble dev been choosed.
   if (!bleStore.currDev.deviceId) {
@@ -32,8 +32,8 @@ const send = async (code: DataView) => {
   // send
   await BleClient.write(
     bleStore.currDev.deviceId,
-    bleDev[bleBrand].srvId,
-    bleDev[bleBrand].wCharId,
+    bleStore.bleModule.srvId,
+    bleStore.bleModule.wCharId,
     code
   );
   // .then(res=>{
@@ -45,8 +45,8 @@ const notify = async () => {
   let msg = '';
   await BleClient.startNotifications(
     currDev.deviceId,
-    bleDev[bleBrand].srvId,
-    bleDev[bleBrand].nCharId,
+    bleStore.bleModule.srvId,
+    bleStore.bleModule.nCharId,
     (resp) => {
       if (resp === null) return null;
       msg = parseNotifications(resp);

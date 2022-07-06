@@ -18,20 +18,26 @@ const currDev = <lBleDev>{
 };
 
 // const bondDevs = LS.getItem('bondDevs')
-// const bondDevs = [
-//   { name: 'aaa', deviceId: 'abcd' },
-//   { name: 'eee', deviceId: 'eeee' },
-//   { name: 'fff', deviceId: 'ffff' },
-// ];
+/* const cDevs = [
+  { name: 'aaa', deviceId: 'abcd' },
+  { name: 'eee', deviceId: 'eeee' },
+  { name: 'fff', deviceId: 'ffff' },
+]; */
 
 const storedDevs = LS.getItem('HBCntdDevs'); // be null when nothing.
 const HBCntdDevs = <lBleDev[]>storedDevs ? storedDevs : [];
-
+export type BleSrv = {
+  srvId: string;
+  wCharId: string;
+  nCharId: string;
+};
 export const useBleStore = defineStore('ble', {
   state: () => ({
+    bleModule: <BleSrv>{},
     currDev,
     selectDev: <lBleDev>{},
     cntdDevs: <lBleDev[]>[],
+    // cntdDevs: <lBleDev[]>cDevs,
     HBCntdDevs: <lBleDev[]>HBCntdDevs,
     // bondDevs: <lBleDev[]>bondDevs,
   }),

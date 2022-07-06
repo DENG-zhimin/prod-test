@@ -32,7 +32,7 @@
       <q-btn
         color="green"
         :disable="testFlag"
-        @click.once="startTest()"
+        @click="startTest()"
         label="开始测试"
       />
       <q-btn color="negative" @click="stopTest()" label="停止测试" />
@@ -50,7 +50,7 @@
               {{
                 ' 序号：' +
                 test.count +
-                '时间：' +
+                ' 时间：' +
                 test.time.substring(test.time.length - 12) +
                 ' 亮度：' +
                 test.fb

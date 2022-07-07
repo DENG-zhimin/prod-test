@@ -1,6 +1,14 @@
 <template>
   <q-page class="bg-white">
-    <title-bar title="添加设备" />
+    <title-bar title="添加设备">
+      <template v-slot:action>
+        <div v-if="isMobile" class="q-px-md">
+          <div>
+            <q-btn @click="scan()" :loading="scanning" label="搜索" />
+          </div>
+        </div>
+      </template>
+    </title-bar>
     <div class="row q-pa-sm">
       <div
         v-if="results.length > 0"
@@ -19,7 +27,7 @@
           </q-card>
         </div>
       </div>
-      <div v-else>搜索中...</div>
+      <div v-else></div>
       <div class="col-12 row justify-center" v-if="error">
         {{ error }}
       </div>
@@ -51,24 +59,35 @@ export default defineComponent({
     const scanning = ref(false);
     // const tried_scanning = ref(false);
     const error = ref('');
+    const isMobile = $q.platform.is.mobile as boolean;
+
+    const scanTime = 20000;
 
     const scan = async () => {
       results.value.length = 0;
-      scanning.value = true;
       // tried_scanning.value = true;
       try {
-        await BleClient.requestLEScan({}, (res) => {
-          const rssi = res.rssi as number;
-          if (rssi > -90) {
-            results.value.push(res.device);
-          }
-          scanning.value = false;
-        });
-        setTimeout(() => {
-          void BleClient.stopLEScan().then(() => {
+        if (isMobile) {
+          scanning.value = true;
+          await BleClient.requestLEScan({}, (res) => {
+            const rssi = res.rssi as number;
+            if (rssi > -90) {
+              results.value.push(res.device);
+            }
+            scanning.value = false;
+          }).finally(() => {
             scanning.value = false;
           });
-        }, 30000);
+          setTimeout(() => {
+            void BleClient.stopLEScan().then(() => {
+              scanning.value = false;
+            });
+          }, scanTime);
+        } else {
+          $q.notify({
+            message: '非移动设备',
+          });
+        }
       } catch (err) {
         error.value = (err as Error).message;
         scanning.value = false;
@@ -108,20 +127,26 @@ export default defineComponent({
     };
 
     onBeforeMount(async () => {
-      await BleClient.initialize();
+      if (isMobile) {
+        await BleClient.initialize();
+      }
     });
 
     onBeforeUnmount(async () => {
       await BleClient.stopLEScan();
     });
 
-    onMounted(scan);
+    onMounted(() => {
+      scan();
+    });
 
     return {
+      isMobile,
       results,
       error,
       scanning,
       connBle,
+      scan,
     };
   },
 });

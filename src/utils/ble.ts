@@ -6,21 +6,6 @@ import UTF8 from 'utf-8';
 // const $q = useQuasar();
 const bleStore = useBleStore();
 
-// ble srvid and characteristic for transparent transfer
-/* const bleDev = {
-  st: {
-    srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
-    wCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write
-    nCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //   notify
-  },
-  dx: {
-    // dx: 大熊智能
-    srvId: '0000ffe0-0000-1000-8000-00805f9b34fb',
-    wCharId: '0000ffe1-0000-1000-8000-00805f9b34fb', //  write
-    nCharId: '0000ffe2-0000-1000-8000-00805f9b34fb', //   notify
-  },
-}; */
-
 const send = async (code: DataView) => {
   // check if ble dev been choosed.
   if (!bleStore.currDev.deviceId) {

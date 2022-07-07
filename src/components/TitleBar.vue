@@ -4,6 +4,8 @@
       <q-icon name="arrow_back" color="primary" />
     </q-btn>
     <div class="col text-bold">{{ title }}</div>
+    <q-space />
+    <slot name="action"></slot>
   </q-bar>
 </template>
 

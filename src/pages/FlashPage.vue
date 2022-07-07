@@ -123,6 +123,7 @@ export default defineComponent({
     const continueSilence = ref(0);
     const cycleSilence = ref(1000);
     const minimumPeriod = ref(10); // minimum period time
+    const counter = ref(0);
 
     const sendCount = ref(0);
     const receiveCount = ref(0);
@@ -179,20 +180,16 @@ export default defineComponent({
       );
     };
 
-    const startTime = ref(0);
-    const counter = ref(0);
-
     const startTest = async () => {
       testFlag.value = true;
       startReceive();
-      startTime.value = new Date().getTime();
       cycleSend();
     };
 
     const cycleSend = async () => {
       intervalHandle1.value = setInterval(() => {
         // set a timer and handler
-        counter.value++; // counter add
+
         // calc the step number against minimumPeriod time.
         const step1 = continueSilence.value / minimumPeriod.value;
         const step2 = cycleSilence.value / minimumPeriod.value;
@@ -200,7 +197,7 @@ export default defineComponent({
         if (
           // counter number within continue time range
           // and same with continue step number
-          counter.value <= step1 * continueTimes.value &&
+          counter.value < step1 * continueTimes.value &&
           counter.value % step1 === 0
         ) {
           sendComm(); // send test command
@@ -209,10 +206,14 @@ export default defineComponent({
           // console.log(counter.value, mark);
         }
 
-        if (counter.value % (step1 * continueTimes.value + step2) === 0) {
+        if (
+          counter.value > 0 &&
+          counter.value % (step1 * continueTimes.value + step2) === 0
+        ) {
           // reached all period time, reset counter
           counter.value = 0;
         }
+        counter.value++; // counter add
       }, minimumPeriod.value); //
     };
 
@@ -237,22 +238,25 @@ export default defineComponent({
       // bleInit();
     });
 
-    watch(continueSilence, (newVal: number, oldVal: number) => {
-      if (newVal >= 500) {
-        continueSilence.value =
-          Math.floor(continueSilence.value / minimumPeriod.value) *
-          minimumPeriod.value;
-      } else if (
-        (newVal === 0 || newVal === '0') &&
-        continueTimes.value === 1
-      ) {
-        continueSilence.value = 0;
-      } else {
-        // minimum 10ms periods
-        continueSilence.value = oldVal;
+    watch(
+      continueSilence,
+      (newVal: number | string, oldVal: number | string) => {
+        if (newVal >= 500) {
+          continueSilence.value =
+            Math.floor(continueSilence.value / minimumPeriod.value) *
+            minimumPeriod.value;
+        } else if (
+          (newVal === 0 || newVal === '0') &&
+          continueTimes.value === 1
+        ) {
+          continueSilence.value = 0;
+        } else {
+          // minimum 10ms periods
+          continueSilence.value = oldVal as number;
+        }
       }
-    });
-    watch(cycleSilence, (newVal: number) => {
+    );
+    watch(cycleSilence, (newVal: number | string) => {
       if (newVal < 500) {
         cycleSilence.value = 500;
       } else {
@@ -262,9 +266,9 @@ export default defineComponent({
           minimumPeriod.value;
       }
     });
-    watch(continueTimes, (newVal: number, oldVal: number) => {
+    watch(continueTimes, (newVal: number | string, oldVal: number | string) => {
       if (newVal < 1) {
-        continueTimes.value = oldVal;
+        continueTimes.value = oldVal as number;
       } else if (newVal === 1) {
         continueSilence.value = 0;
       } else {

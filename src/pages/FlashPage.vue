@@ -1,6 +1,7 @@
 <template>
-  <q-page class="column items-center">
+  <q-page class="column items-center q-pa-sm">
     <div class="text-h4 q-my-md">Flash Test</div>
+    <q-separator class="full-width" inset />
     <div class="row full-width justify-evenly q-ma-md">
       <q-input
         class="col-3"
@@ -27,7 +28,7 @@
         v-model="cycleSilence"
       />
     </div>
-    <q-separator inset />
+
     <div class="row justify-evenly full-width q-ma-md">
       <q-input
         class="col-4"
@@ -40,7 +41,7 @@
       <q-radio v-model="enableThreshold" val="1" label="是" />
       <q-radio v-model="enableThreshold" val="0" label="否" />
     </div>
-    <q-separator inset />
+    <q-separator class="full-width" inset />
     <div class="row justify-evenly full-width q-ma-md">
       <div
         class="col-6 row items-center bg-grey-7 text-bold text-white q-px-xs"
@@ -61,8 +62,12 @@
       <q-btn color="green" @click="startReceive()" label="开始接收" />
       <q-btn color="negative" @click="stopReceive()" label="停止接收" />
     </div> -->
-    <q-separator></q-separator>
-    <div class="row q-pa-sm full-width justify-center">
+    <q-separator class="full-width"></q-separator>
+    <div class="column q-pa-sm full-width justify-center">
+      <div v-if="testFB.length > 0" class="row items-center justify-evenly">
+        <q-btn color="warning" label="重置" @click="resetParam()"></q-btn>
+        <q-btn color="primary" label="导出" @click="exportFile()"></q-btn>
+      </div>
       <div class="row justify-center q-my-sm">
         <q-list dense>
           <q-item v-for="test in testFB" :key="test.time">
@@ -101,6 +106,7 @@ import { send, parseNotifications, flash_test_encode } from 'src/utils/ble';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 import { useBleStore } from 'src/stores/ble-store';
 import { formatTime } from 'src/utils/comm';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 type FlashFeedback = {
   time: string;
@@ -136,7 +142,12 @@ export default defineComponent({
     const bleStore = useBleStore();
     // const { ble = storeToRefs(bleStore);
 
-    const testFB = ref(<FlashFeedback[]>[]);
+    const testFB = ref(<FlashFeedback[]>[
+      { count: 123, time: '123', fb: '30' },
+      { count: 123, time: '123', fb: '30' },
+      { count: 123, time: '123', fb: '30' },
+      { count: 123, time: '123', fb: '30' },
+    ]);
 
     const intervalHandle1 = ref();
 
@@ -229,8 +240,31 @@ export default defineComponent({
       sendCount.value++;
     };
 
+    const resetParam = () => {
+      continueSilence.value = 0;
+      continueTimes.value = 1;
+      cycleSilence.value = 1000;
+      threshold.value = 5;
+      enableThreshold.value = '1';
+      sendCount.value = 0;
+      testFB.value.length = 0;
+    };
+
+    const exportFile = async () => {
+      if ($q.platform.is.mobile) {
+        await Filesystem.writeFile({
+          path: 'Download/testing-report.txt',
+          data: JSON.stringify(testFB),
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
+        });
+      }
+    };
+
     onBeforeMount(() => {
-      BleClient.initialize();
+      if ($q.platform.is.mobile) {
+        BleClient.initialize();
+      }
     });
 
     // receive msg from ble
@@ -295,6 +329,8 @@ export default defineComponent({
       startReceive,
       stopTest,
       stopReceive,
+      resetParam,
+      exportFile,
     };
   },
 });

@@ -70,7 +70,7 @@
       </div>
       <div
         class="row justify-center q-my-sm"
-        style="overflow: auto; max-height: 500px"
+        style="overflow: auto; max-height: 450px"
       >
         <q-list dense>
           <q-item v-for="test in testFB" :key="test.time">
@@ -109,7 +109,8 @@ import { send, parseNotifications, flash_test_encode } from 'src/utils/ble';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 import { useBleStore } from 'src/stores/ble-store';
 import { formatTime } from 'src/utils/comm';
-// import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { LocalStorage as LS } from 'quasar';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 type FlashFeedback = {
   time: string;
@@ -140,14 +141,12 @@ export default defineComponent({
     const error = ref('');
 
     const enableThreshold = ref('1');
-    const threshold = ref(5);
+    const threshold = ref(1);
 
     const bleStore = useBleStore();
     // const { ble = storeToRefs(bleStore);
 
-    const testFB = ref(<FlashFeedback[]>[
-      // { count: 123, time: '123', fb: '30' },
-    ]);
+    const testFB = ref(<FlashFeedback[]>[]);
 
     const intervalHandle1 = ref();
 
@@ -168,7 +167,7 @@ export default defineComponent({
             fb: fb,
             count: receiveCount.value,
           };
-          testFB.value.unshift(singleFB);
+          testFB.value.push(singleFB);
           const ret = parseInt(fb); //return numbers
           if (enableThreshold.value === '1' && ret < threshold.value) {
             stopTest();
@@ -235,7 +234,11 @@ export default defineComponent({
     const stopTest = () => {
       testFlag.value = false;
       clearInterval(intervalHandle1.value);
-      stopReceive();
+      setTimeout(() => {
+        // stop receive msg after 1000ms
+        stopReceive();
+      }, 1000);
+      LS.set('test-report', testFB.value);
     };
 
     const sendComm = () => {
@@ -255,32 +258,49 @@ export default defineComponent({
       testFB.value.length = 0;
     };
 
+    type FileWriteRes = { uri: string };
+
     const exportFile = async () => {
-      if ($q.platform.is.mobile) {
-        try {
-          let stream = '序号;时间;计数\r\n';
-          // streampush(header.split(''));
-          testFB.value.forEach((line) => {
-            stream += line.count + ';' + line.time + ';' + line.fb + '\r\n';
+      try {
+        let stream = '序号;时间;计数\n';
+        // streampush(header.split(''));
+        testFB.value.forEach((line) => {
+          stream += line.count + ';' + line.time + ';' + line.fb + '\n';
+        });
+        if ($q.platform.is.mobile) {
+          // mobile download
+          const res = await Filesystem.writeFile({
+            path: 'test-report.csv',
+            data: stream,
+            directory: Directory.Documents, // target directory file://Documents
+            encoding: Encoding.UTF8,
           });
-          // const stream = JSON.stringify(testFB.value);
+          const ret = res as FileWriteRes;
+          $q.notify({
+            message: ret.uri,
+          });
+        } else {
+          // web download
           const stream2 = stream.split('');
           let blob = new Blob(stream2);
           const elink = document.createElement('a');
           elink.download = 'test-report.csv';
           elink.style.display = 'none';
           elink.href = URL.createObjectURL(blob);
-          elink.click();
-          elink.id = 'downlink';
-          URL.revokeObjectURL(elink.href);
-          // document.getElementById('downlink')?.remove()
-          elink.remove();
-        } catch (err) {
-          const msg = (err as Error).message;
+          document.body.appendChild(elink);
+          const link = elink.click();
+          console.log(link);
           $q.notify({
-            message: msg,
+            message: 'report downloaded ',
           });
+          URL.revokeObjectURL(elink.href);
+          elink.remove();
         }
+      } catch (err) {
+        const msg = (err as Error).message;
+        $q.notify({
+          message: msg,
+        });
       }
     };
 

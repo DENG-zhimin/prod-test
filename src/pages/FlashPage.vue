@@ -1,6 +1,6 @@
 <template>
   <q-page class="column items-center q-pa-sm">
-    <div class="text-h4 q-my-md">Flash Test</div>
+    <div class="text-h4 q-my-sm">Flash Test</div>
     <q-separator class="full-width" inset />
     <div class="row full-width justify-evenly q-ma-md">
       <q-input
@@ -63,12 +63,15 @@
       <q-btn color="negative" @click="stopReceive()" label="停止接收" />
     </div> -->
     <q-separator class="full-width"></q-separator>
-    <div class="column q-pa-sm full-width justify-center">
+    <div class="col column q-pa-sm full-width justify-center">
       <div v-if="testFB.length > 0" class="row items-center justify-evenly">
         <q-btn color="warning" label="重置" @click="resetParam()"></q-btn>
         <q-btn color="primary" label="导出" @click="exportFile()"></q-btn>
       </div>
-      <div class="row justify-center q-my-sm">
+      <div
+        class="row justify-center q-my-sm"
+        style="overflow: auto; max-height: 500px"
+      >
         <q-list dense>
           <q-item v-for="test in testFB" :key="test.time">
             <q-item-section>
@@ -106,7 +109,7 @@ import { send, parseNotifications, flash_test_encode } from 'src/utils/ble';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 import { useBleStore } from 'src/stores/ble-store';
 import { formatTime } from 'src/utils/comm';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+// import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 type FlashFeedback = {
   time: string;
@@ -143,10 +146,7 @@ export default defineComponent({
     // const { ble = storeToRefs(bleStore);
 
     const testFB = ref(<FlashFeedback[]>[
-      { count: 123, time: '123', fb: '30' },
-      { count: 123, time: '123', fb: '30' },
-      { count: 123, time: '123', fb: '30' },
-      { count: 123, time: '123', fb: '30' },
+      // { count: 123, time: '123', fb: '30' },
     ]);
 
     const intervalHandle1 = ref();
@@ -204,27 +204,31 @@ export default defineComponent({
         // calc the step number against minimumPeriod time.
         const step1 = continueSilence.value / minimumPeriod.value;
         const step2 = cycleSilence.value / minimumPeriod.value;
-        // console.log(counter.value, counter2);
-        if (
-          // counter number within continue time range
-          // and same with continue step number
-          counter.value < step1 * continueTimes.value &&
-          counter.value % step1 === 0
-        ) {
-          sendComm(); // send test command
-          // const t = new Date();
-          // const mark = t.getSeconds() + '.' + t.getMilliseconds();
-          // console.log(counter.value, mark);
+        // console.log(counter.value, 'out');
+        if (step1 === 0) {
+          if (counter.value === 0) {
+            sendComm(); // send test command
+          }
+        } else {
+          if (
+            // counter number within continue time range
+            // and same with continue step number
+            counter.value < step1 * continueTimes.value &&
+            counter.value % step1 === 0
+          ) {
+            sendComm(); // send test command
+          }
         }
+
+        counter.value++; // counter add, must before reset
 
         if (
           counter.value > 0 &&
-          counter.value % (step1 * continueTimes.value + step2) === 0
+          counter.value === step1 * continueTimes.value + step2
         ) {
           // reached all period time, reset counter
           counter.value = 0;
         }
-        counter.value++; // counter add
       }, minimumPeriod.value); //
     };
 
@@ -247,17 +251,36 @@ export default defineComponent({
       threshold.value = 5;
       enableThreshold.value = '1';
       sendCount.value = 0;
+      receiveCount.value = 0;
       testFB.value.length = 0;
     };
 
     const exportFile = async () => {
       if ($q.platform.is.mobile) {
-        await Filesystem.writeFile({
-          path: 'Download/testing-report.txt',
-          data: JSON.stringify(testFB),
-          directory: Directory.Documents,
-          encoding: Encoding.UTF8,
-        });
+        try {
+          let stream = '序号;时间;计数\r\n';
+          // streampush(header.split(''));
+          testFB.value.forEach((line) => {
+            stream += line.count + ';' + line.time + ';' + line.fb + '\r\n';
+          });
+          // const stream = JSON.stringify(testFB.value);
+          const stream2 = stream.split('');
+          let blob = new Blob(stream2);
+          const elink = document.createElement('a');
+          elink.download = 'test-report.csv';
+          elink.style.display = 'none';
+          elink.href = URL.createObjectURL(blob);
+          elink.click();
+          elink.id = 'downlink';
+          URL.revokeObjectURL(elink.href);
+          // document.getElementById('downlink')?.remove()
+          elink.remove();
+        } catch (err) {
+          const msg = (err as Error).message;
+          $q.notify({
+            message: msg,
+          });
+        }
       }
     };
 

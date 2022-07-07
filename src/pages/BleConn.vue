@@ -75,8 +75,6 @@ export default defineComponent({
               results.value.push(res.device);
             }
             scanning.value = false;
-          }).finally(() => {
-            scanning.value = false;
           });
           setTimeout(() => {
             void BleClient.stopLEScan().then(() => {

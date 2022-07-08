@@ -31,6 +31,9 @@
       <div class="col-12 row justify-center" v-if="error">
         {{ error }}
       </div>
+      <!-- <div>
+        {{ bleStore.cntdDevs }}
+      </div> -->
       <!-- <div class="q-pa-lg">默认pin码： 112233</div> -->
     </div>
   </q-page>
@@ -45,6 +48,7 @@ import {
   onBeforeUnmount,
 } from 'vue';
 import { BleClient, BleDevice } from '@capacitor-community/bluetooth-le';
+import { bleModules } from 'src/utils/ble';
 import { useQuasar } from 'quasar';
 import { useBleStore, lBleDev } from 'src/stores/ble-store';
 import TitleBar from 'src/components/TitleBar.vue';
@@ -105,6 +109,7 @@ export default defineComponent({
           // ctx.emit('bleConnected', ble);
           const ldev = <lBleDev>ble;
           ldev.connected = true;
+          ldev.srvs = bleModules[0].value; // default srvs and characteristics value
           bleStore.cntdDevs.push(ldev);
           bleStore.updateName();
           if (results.value.length > 0) {
@@ -146,6 +151,7 @@ export default defineComponent({
       scanning,
       connBle,
       scan,
+      bleStore,
     };
   },
 });

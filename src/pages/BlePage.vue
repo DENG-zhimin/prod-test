@@ -79,6 +79,12 @@
           三、点选一个“当前连接设备”， 使其成为“选定设备”,接受蓝牙控制指令。
         </div>
       </div>
+      <!-- <div class="q-pa-">
+        {{ currDev }}
+      </div>
+      <div class="q-pa-">
+        {{ cntdDevs }}
+      </div> -->
     </div>
   </q-page>
 </template>
@@ -93,7 +99,6 @@ import { useQuasar } from 'quasar';
 
 import TitleBar from 'src/components/TitleBar.vue';
 import { BleClient } from '@capacitor-community/bluetooth-le';
-import { bleModules } from 'src/utils/ble';
 
 export default defineComponent({
   name: 'BlePage',
@@ -133,7 +138,7 @@ export default defineComponent({
     const setCurrDev = (dev: lBleDev) => {
       // if (dev.deviceId !== currDev.value.deviceId) {
       const tmpDev = JSON.parse(JSON.stringify(dev)) as lBleDev;
-      tmpDev.srvs = bleModules[0].value; // first as default
+      // tmpDev.srvs = bleModules[0].value; // first as default
       currDev.value = tmpDev;
       // } else {
       //   $q.notify({
@@ -151,6 +156,7 @@ export default defineComponent({
     };
 
     const goBleDev = (dev: lBleDev) => {
+      bleStore.selectDev = dev;
       router.push({ name: 'bledev', params: { devId: dev.deviceId } });
     };
 
@@ -162,12 +168,18 @@ export default defineComponent({
 
     // get connected devs and update pinia
     const getConnDev = async () => {
-      cntdDevs.value.length = 0;
       await BleClient.getConnectedDevices([]).then((res) => {
         res.forEach((v) => {
           let ldev = <lBleDev>v;
-          ldev.connected = true;
-          cntdDevs.value.push(ldev);
+          let inArray = 0;
+          cntdDevs.value.forEach((item) => {
+            if (item.deviceId === ldev.deviceId) {
+              inArray = 1;
+            }
+          });
+          if (inArray === 0) {
+            cntdDevs.value.push(ldev);
+          }
         });
       });
     };

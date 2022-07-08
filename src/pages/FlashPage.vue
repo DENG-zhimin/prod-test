@@ -55,8 +55,8 @@
       </div>
 
       <q-btn
-        :color="!(testFlag || currDev.deviceId === '') ? 'green' : 'grey-7'"
-        :disable="testFlag || currDev.deviceId === ''"
+        :color="startFlag ? 'grey-7' : 'green'"
+        :disable="startFlag"
         @click="startTest()"
         label="开始"
       />
@@ -143,6 +143,7 @@ import {
   onMounted,
   onBeforeMount,
   watch,
+  computed,
   // computed,
 } from 'vue';
 import { useQuasar } from 'quasar';
@@ -171,10 +172,17 @@ export default defineComponent({
       KeepAwake.keepAwake();
     }
 
+    const bleStore = useBleStore();
+    const { currDev } = storeToRefs(bleStore);
+
+    const testFlag = ref(false); // true: is testing, false: stpped
+    const startFlag = computed(() => {
+      return testFlag.value === true || currDev.value.deviceId === '';
+    });
     const showExportDialog = ref(false);
     const prodName = ref(''); // testing product model
     const prodModel = ref(''); // testing product model
-    const testFlag = ref(false); // true: is testing, false: stpped
+
     const stopReason = ref(''); // as show on Name.
     const continueTimes = ref(1); // 连闪次数
     const continueSilence = ref(0); // 连闪间隔时间
@@ -188,10 +196,7 @@ export default defineComponent({
     const error = ref(''); // error msg
 
     const enableThreshold = ref('1');
-    const threshold = ref(1);
-
-    const bleStore = useBleStore();
-    const { currDev } = storeToRefs(bleStore);
+    const threshold = ref(<number | string>1);
 
     const testFB = ref(<FlashFeedback[]>[]); // testing records data array
 
@@ -216,6 +221,9 @@ export default defineComponent({
           };
           testFB.value.unshift(singleFB);
           const ret = parseInt(fb); //return numbers
+          if (typeof threshold.value === 'string') {
+            threshold.value = parseInt(threshold.value);
+          }
           if (enableThreshold.value === '1' && ret < threshold.value) {
             stopReason.value = '触发阀值停止';
             stopTest();
@@ -356,10 +364,22 @@ export default defineComponent({
             testFB.value[i].fb +
             '\n';
         }
+
+        const t = new Date();
+        const tMark =
+          t.getSeconds().toString() + t.getMilliseconds().toString();
+        const filename =
+          prodName.value +
+          '-' +
+          prodModel.value +
+          '-' +
+          tMark +
+          '-' +
+          'test-report.csv';
         if ($q.platform.is.mobile) {
           // mobile download
           const res = await Filesystem.writeFile({
-            path: 'test-report.csv',
+            path: filename,
             data: stream,
             directory: Directory.Documents, // target directory file://Documents
             encoding: Encoding.UTF8,
@@ -373,7 +393,8 @@ export default defineComponent({
           const stream2 = stream.split('');
           let blob = new Blob(stream2);
           const elink = document.createElement('a');
-          elink.download = 'test-report.csv';
+
+          elink.download = filename;
           elink.style.display = 'none';
           elink.href = URL.createObjectURL(blob);
           document.body.appendChild(elink);
@@ -478,6 +499,7 @@ export default defineComponent({
       sendCount,
       receiveCount,
       testFB,
+      startFlag,
       testFlag,
       continueTimes,
       continueSilence,

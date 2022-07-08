@@ -6,7 +6,7 @@ const formatTime = (date: Date) => {
   const hour = date.getHours();
   const minute = date.getMinutes();
   const second = date.getSeconds();
-  // const ms = date.getMilliseconds();
+  const ms = date.getMilliseconds();
 
   return (
     [year, month, day].map(formatNumber).join('-') +

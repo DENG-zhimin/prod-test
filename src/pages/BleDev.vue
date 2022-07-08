@@ -59,6 +59,7 @@
           :options="bleModules"
           map-options
           emit-value
+          @update:model-value="checkCurrDev()"
         />
         <!-- @update:model-value="onModuleChange" -->
       </div>
@@ -69,7 +70,7 @@
 <script lang="ts">
 import { defineComponent, computed, onBeforeMount } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useRoute } from 'vue-router';
+// import { useRoute } from 'vue-router';
 import { lBleDev, useBleStore } from 'src/stores/ble-store';
 import { useQuasar } from 'quasar';
 import { connect, disConnect, bleModules } from 'src/utils/ble';
@@ -81,9 +82,9 @@ export default defineComponent({
   components: { TitleBar },
   setup() {
     const $q = useQuasar();
-    const route = useRoute();
+    // const route = useRoute();
     const bleStore = useBleStore();
-    const { cntdDevs, HBCntdDevs, selectDev } = storeToRefs(bleStore);
+    const { currDev, HBCntdDevs, selectDev } = storeToRefs(bleStore);
 
     const devName = computed(() => {
       let name = <string>'';
@@ -124,40 +125,28 @@ export default defineComponent({
       }
     };
 
-    // const selectDev = ref(<lBleDev | null>{})
-    onBeforeMount(() => {
-      Object.assign(selectDev.value, { name: '', lName: '', deviceId: '' });
-      cntdDevs.value.forEach((item) => {
-        if (item.deviceId === route.params.devId) {
-          selectDev.value = item;
-          selectDev.value.connected = true;
-        }
-
-        selectDev.value.bonded = false;
-
-        HBCntdDevs.value.forEach((item) => {
-          if (selectDev.value.deviceId === item.deviceId) {
-            selectDev.value.bonded = true;
-          }
-        });
-      });
-      if (selectDev.value.deviceId === undefined) {
-        HBCntdDevs.value.forEach((item) => {
-          if (item.deviceId === route.params.devId) {
-            selectDev.value = item;
-            selectDev.value.bonded = true;
-          }
-        });
+    const checkCurrDev = () => {
+      if (currDev.value.deviceId === selectDev.value.deviceId) {
+        currDev.value.srvs = selectDev.value.srvs;
       }
+    };
+
+    onBeforeMount(() => {
+      HBCntdDevs.value.forEach((item) => {
+        if (selectDev.value.deviceId === item.deviceId) {
+          selectDev.value.lName = item.lName;
+        }
+      });
     });
 
     return {
       bleModules,
       devName,
-      chgName,
       selectDev,
+      chgName,
       connect,
       fireDisConnect,
+      checkCurrDev,
     };
   },
 });

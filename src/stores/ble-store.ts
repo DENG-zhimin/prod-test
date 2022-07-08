@@ -93,7 +93,7 @@ const updateDevName = (arr: lBleDev[]) => {
     arr.forEach((item, index) => {
       savedDevs.forEach((el) => {
         if (item.deviceId === el.deviceId) {
-          arr[index].lName = el.lName;
+          arr[index] = el;
         }
       });
     });

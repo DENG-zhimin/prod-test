@@ -27,7 +27,9 @@
         </div>
       </div>
       <div class="q-px-sm bg-white">
-        <div class="column text-body-2 text-bold text-primary">已连接设备</div>
+        <div class="column text-body-2 text-bold text-primary">
+          当前连接设备
+        </div>
         <q-separator></q-separator>
         <q-list
           separator
@@ -66,6 +68,17 @@
           </q-btn>
         </q-list>
       </div>
+      <div class="q-pa-md">
+        <div class="text-bold">注意事项：</div>
+
+        <div class="q-pa-sm">一、蓝牙 BLE 可同时连接多台设备。</div>
+        <div class="q-pa-sm">
+          二、当前连接的蓝牙 BLE 设备会显示在“当前连接设备”项下。
+        </div>
+        <div class="q-pa-sm">
+          三、点选一个“当前连接设备”， 使其成为“选定设备”,接受蓝牙控制指令。
+        </div>
+      </div>
     </div>
   </q-page>
 </template>
@@ -80,6 +93,7 @@ import { useQuasar } from 'quasar';
 
 import TitleBar from 'src/components/TitleBar.vue';
 import { BleClient } from '@capacitor-community/bluetooth-le';
+import { bleModules } from 'src/utils/ble';
 
 export default defineComponent({
   name: 'BlePage',
@@ -118,8 +132,9 @@ export default defineComponent({
 
     const setCurrDev = (dev: lBleDev) => {
       // if (dev.deviceId !== currDev.value.deviceId) {
-      let tmpDev = JSON.stringify(dev);
-      currDev.value = JSON.parse(tmpDev) as lBleDev;
+      const tmpDev = JSON.parse(JSON.stringify(dev)) as lBleDev;
+      tmpDev.srvs = bleModules[0].value; // first as default
+      currDev.value = tmpDev;
       // } else {
       //   $q.notify({
       //     message: '已选择该设备。',

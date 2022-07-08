@@ -1,6 +1,6 @@
 <template>
   <q-page class="column items-center justify-evenly">
-    <h1>Analysys</h1>
+    <h2>Analysis</h2>
   </q-page>
 </template>
 

@@ -4,11 +4,13 @@ import {
   // BleService,
 } from '@capacitor-community/bluetooth-le';
 import { LocalStorage as LS } from 'quasar';
+import { BleSrv } from 'src/utils/ble';
 
 export type lBleDev = BleDevice & {
   lName: string | undefined; // local name
   connected: boolean | undefined;
   bonded: boolean | undefined;
+  srvs: BleSrv;
 };
 
 const currDev = <lBleDev>{
@@ -26,14 +28,9 @@ const currDev = <lBleDev>{
 
 const storedDevs = LS.getItem('HBCntdDevs'); // be null when nothing.
 const HBCntdDevs = <lBleDev[]>storedDevs ? storedDevs : [];
-export type BleSrv = {
-  srvId: string;
-  wCharId: string;
-  nCharId: string;
-};
+
 export const useBleStore = defineStore('ble', {
   state: () => ({
-    bleModule: <BleSrv>{},
     currDev,
     selectDev: <lBleDev>{},
     cntdDevs: <lBleDev[]>[],

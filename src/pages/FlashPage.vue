@@ -1,6 +1,6 @@
 <template>
   <q-page class="column items-center q-pa-sm">
-    <div class="text-h4 q-my-sm">Flash Test</div>
+    <div class="text-h5 q-my-sm">产品测试</div>
     <q-separator class="full-width" inset />
     <div class="row full-width justify-evenly q-ma-md">
       <q-input
@@ -31,6 +31,7 @@
 
     <div class="row justify-evenly full-width q-ma-md">
       <q-input
+        :disable="enableThreshold === '0'"
         class="col-4"
         dense
         outlined
@@ -38,8 +39,11 @@
         type="number"
         v-model="threshold"
       />
-      <q-radio v-model="enableThreshold" val="1" label="是" />
-      <q-radio v-model="enableThreshold" val="0" label="否" />
+      <div class="row items-center">
+        <div class="row items-center">启用阀值：</div>
+        <q-radio v-model="enableThreshold" val="1" label="是" />
+        <q-radio v-model="enableThreshold" val="0" label="否" />
+      </div>
     </div>
     <q-separator class="full-width" inset />
     <div class="row justify-evenly full-width q-ma-md">
@@ -51,28 +55,47 @@
       </div>
 
       <q-btn
-        color="green"
-        :disable="testFlag"
+        :color="!(testFlag || currDev.deviceId === '') ? 'green' : 'grey-7'"
+        :disable="testFlag || currDev.deviceId === ''"
         @click="startTest()"
         label="开始"
       />
-      <q-btn color="negative" @click="stopTest()" label="停止" />
+      <q-btn
+        :disable="!testFlag"
+        :color="testFlag === true ? 'negative' : 'grey-7'"
+        @click="manualStopTest()"
+        label="停止"
+      />
+      <!-- <q-btn color="negative" @click="showExportDialog = true" label="show" /> -->
     </div>
     <!-- <div class="col-6 row justify-evenly q-my-sm full-width">
       <q-btn color="green" @click="startReceive()" label="开始接收" />
       <q-btn color="negative" @click="stopReceive()" label="停止接收" />
     </div> -->
     <q-separator class="full-width"></q-separator>
-    <div class="col column q-pa-sm full-width justify-center">
-      <div v-if="testFB.length > 0" class="row items-center justify-evenly">
-        <q-btn color="warning" label="重置" @click="resetParam()"></q-btn>
-        <q-btn color="primary" label="导出" @click="exportFile()"></q-btn>
+    <div class="col column q-pa-sm full-width">
+      <div
+        v-if="testFB.length > 0"
+        class="row items-center justify-end q-pr-md"
+      >
+        <q-btn
+          outline
+          color="negative"
+          label="重置"
+          @click="resetParam()"
+        ></q-btn>
+        <q-btn
+          class="q-ml-lg"
+          color="primary"
+          label="生成报告"
+          @click="showExportDialog = true"
+        ></q-btn>
       </div>
       <div
         class="row justify-center q-my-sm"
         style="overflow: auto; max-height: 450px"
       >
-        <q-list dense>
+        <q-list separator dense>
           <q-item v-for="test in testFB" :key="test.time">
             <q-item-section>
               {{
@@ -92,6 +115,25 @@
       <!-- {{ testFB }} -->
       {{ error }}
     </div>
+    <q-dialog v-model="showExportDialog" persistent pointer-events="all">
+      <div class="column items-center q-gutter-sm bg-white q-pa-sm">
+        <div class="row items-center q-pa-sm">生成测试报告</div>
+        <q-separator class="full-width" inset></q-separator>
+        <q-input outlined v-model="prodName" label="产品名称(必填)" />
+        <q-input outlined v-model="prodModel" label="型号" />
+        <q-separator class="full-width q-mt-md" inset></q-separator>
+        <div class="row full-width justify-evenly q-pa-sm">
+          <q-btn outline color="primary" label="取消" v-close-popup />
+          <q-btn
+            unelevated
+            color="primary"
+            label="确认"
+            type="button"
+            @click="triggerExport()"
+          />
+        </div>
+      </div>
+    </q-dialog>
   </q-page>
 </template>
 <script lang="ts">
@@ -104,12 +146,12 @@ import {
   // computed,
 } from 'vue';
 import { useQuasar } from 'quasar';
+import { storeToRefs } from 'pinia';
 import { KeepAwake } from '@capacitor-community/keep-awake';
 import { send, parseNotifications, flash_test_encode } from 'src/utils/ble';
 import { BleClient } from '@capacitor-community/bluetooth-le';
-import { useBleStore } from 'src/stores/ble-store';
+import { useBleStore, lBleDev } from 'src/stores/ble-store';
 import { formatTime } from 'src/utils/comm';
-import { LocalStorage as LS } from 'quasar';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 type FlashFeedback = {
@@ -128,34 +170,39 @@ export default defineComponent({
       // keep awake
       KeepAwake.keepAwake();
     }
-    const testFlag = ref(false);
-    const continueTimes = ref(1);
-    const continueSilence = ref(0);
-    const cycleSilence = ref(1000);
+
+    const showExportDialog = ref(false);
+    const prodName = ref(''); // testing product model
+    const prodModel = ref(''); // testing product model
+    const testFlag = ref(false); // true: is testing, false: stpped
+    const stopReason = ref(''); // as show on Name.
+    const continueTimes = ref(1); // 连闪次数
+    const continueSilence = ref(0); // 连闪间隔时间
+    const cycleSilence = ref(1000); // 周期间隔时间
     const minimumPeriod = ref(10); // minimum period time
-    const counter = ref(0);
+    const counter = ref(0); // time slice counter, counter for testing interval
 
-    const sendCount = ref(0);
-    const receiveCount = ref(0);
+    const sendCount = ref(0); // how many commands sent
+    const receiveCount = ref(0); // how many feedbacks received
 
-    const error = ref('');
+    const error = ref(''); // error msg
 
     const enableThreshold = ref('1');
     const threshold = ref(1);
 
     const bleStore = useBleStore();
-    // const { ble = storeToRefs(bleStore);
+    const { currDev } = storeToRefs(bleStore);
 
-    const testFB = ref(<FlashFeedback[]>[]);
+    const testFB = ref(<FlashFeedback[]>[]); // testing records data array
 
-    const intervalHandle1 = ref();
+    const intervalHandler = ref();
 
     const startReceive = () => {
       // try {
       BleClient.startNotifications(
-        bleStore.currDev.deviceId,
-        bleStore.bleModule.srvId,
-        bleStore.bleModule.nCharId,
+        currDev.value.deviceId,
+        currDev.value.srvs.srvId,
+        currDev.value.srvs.nCharId,
         (res) => {
           receiveCount.value++;
           let time = new Date();
@@ -167,9 +214,10 @@ export default defineComponent({
             fb: fb,
             count: receiveCount.value,
           };
-          testFB.value.push(singleFB);
+          testFB.value.unshift(singleFB);
           const ret = parseInt(fb); //return numbers
           if (enableThreshold.value === '1' && ret < threshold.value) {
+            stopReason.value = '触发阀值停止';
             stopTest();
           }
         }
@@ -184,20 +232,20 @@ export default defineComponent({
 
     const stopReceive = () => {
       BleClient.stopNotifications(
-        bleStore.currDev.deviceId,
-        bleStore.bleModule.srvId,
-        bleStore.bleModule.nCharId
+        currDev.value.deviceId,
+        currDev.value.srvs.srvId,
+        currDev.value.srvs.nCharId
       );
     };
 
     const startTest = async () => {
-      testFlag.value = true;
-      startReceive();
-      cycleSend();
+      testFlag.value = true; // change status flag
+      startReceive(); // start notify receiver
+      cycleSend(); // start command sender
     };
 
     const cycleSend = async () => {
-      intervalHandle1.value = setInterval(() => {
+      intervalHandler.value = setInterval(() => {
         // set a timer and handler
 
         // calc the step number against minimumPeriod time.
@@ -231,14 +279,17 @@ export default defineComponent({
       }, minimumPeriod.value); //
     };
 
-    const stopTest = () => {
+    const manualStopTest = async () => {
+      stopReason.value = '手动停止';
+      stopTest();
+    };
+    const stopTest = async () => {
       testFlag.value = false;
-      clearInterval(intervalHandle1.value);
+      clearInterval(intervalHandler.value);
       setTimeout(() => {
         // stop receive msg after 1000ms
         stopReceive();
       }, 1000);
-      LS.set('test-report', testFB.value);
     };
 
     const sendComm = () => {
@@ -260,13 +311,51 @@ export default defineComponent({
 
     type FileWriteRes = { uri: string };
 
-    const exportFile = async () => {
+    const exportReport = async () => {
       try {
-        let stream = '序号;时间;计数\n';
-        // streampush(header.split(''));
-        testFB.value.forEach((line) => {
-          stream += line.count + ';' + line.time + ';' + line.fb + '\n';
-        });
+        let stream =
+          prodName.value + '-' + prodModel.value + ' 测试报告' + '\n';
+        stream += '报告生成时间,' + formatTime(new Date()) + '\n';
+        stream +=
+          '测试参数,' +
+          '连闪次数,' +
+          continueTimes.value +
+          ',' +
+          '连闪间隔时间（毫秒）,' +
+          continueSilence.value +
+          ',' +
+          '周期间隔时间（毫秒）,' +
+          cycleSilence.value +
+          '\n';
+
+        stream +=
+          '启用阀值,' +
+          (enableThreshold.value ? '是' : '否') +
+          ',' +
+          '阀值,' +
+          threshold.value +
+          '\n';
+        stream +=
+          '次数统计,' +
+          '发送数,' +
+          sendCount.value +
+          ',' +
+          '接收数,' +
+          receiveCount.value +
+          '\n';
+        stream += '停止原因,' + stopReason.value + '\n';
+
+        stream += '序号,时间,读数\n';
+        // read test result
+        for (let i = testFB.value.length - 1; i >= 0; i--) {
+          stream +=
+            testFB.value[i].count +
+            ',' +
+            testFB.value[i].time +
+            ',' +
+            testFB.value[i].fb +
+            '\n';
+        }
         if ($q.platform.is.mobile) {
           // mobile download
           const res = await Filesystem.writeFile({
@@ -288,8 +377,7 @@ export default defineComponent({
           elink.style.display = 'none';
           elink.href = URL.createObjectURL(blob);
           document.body.appendChild(elink);
-          const link = elink.click();
-          console.log(link);
+          elink.click();
           $q.notify({
             message: 'report downloaded ',
           });
@@ -301,6 +389,20 @@ export default defineComponent({
         $q.notify({
           message: msg,
         });
+      }
+    };
+
+    const triggerExport = () => {
+      console.log(prodName.value, prodName.value.length);
+      if (prodName.value === '') {
+        $q.notify({
+          message: '没有填写产品名称',
+        });
+      } else {
+        console.log(prodName.value, prodName.value.length);
+        console.log('start export');
+        showExportDialog.value = false; // hide prod info dialog
+        exportReport(); // trigger export
       }
     };
 
@@ -356,7 +458,20 @@ export default defineComponent({
       }
     });
 
+    watch(currDev, (newVal: lBleDev) => {
+      if (newVal.deviceId === '' && testFlag.value === true) {
+        stopReason.value = '蓝牙连接断开';
+        stopTest();
+        $q.notify({
+          message: '蓝牙连接断开，测试停止。',
+        });
+      }
+    });
+
     return {
+      prodName,
+      prodModel,
+      currDev,
       minimumPeriod,
       enableThreshold,
       threshold,
@@ -367,13 +482,17 @@ export default defineComponent({
       continueTimes,
       continueSilence,
       cycleSilence,
+      stopReason,
+      showExportDialog,
       error,
       startTest,
       startReceive,
+      manualStopTest,
       stopTest,
       stopReceive,
       resetParam,
-      exportFile,
+      exportReport,
+      triggerExport,
     };
   },
 });

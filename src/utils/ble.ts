@@ -1,3 +1,4 @@
+import { storeToRefs } from 'pinia';
 import { BleClient, BleDevice } from '@capacitor-community/bluetooth-le';
 import { lBleDev, useBleStore } from 'src/stores/ble-store';
 // import { useQuasar } from 'quasar';
@@ -5,10 +6,11 @@ import UTF8 from 'utf-8';
 
 // const $q = useQuasar();
 const bleStore = useBleStore();
+const { currDev } = storeToRefs(bleStore);
 
 const send = async (code: DataView) => {
   // check if ble dev been choosed.
-  if (!bleStore.currDev.deviceId) {
+  if (!currDev.value.deviceId) {
     // $q.notify({
     //   message: 'Please choose a device first.',
     // });
@@ -16,9 +18,9 @@ const send = async (code: DataView) => {
   }
   // send
   await BleClient.write(
-    bleStore.currDev.deviceId,
-    bleStore.bleModule.srvId,
-    bleStore.bleModule.wCharId,
+    currDev.value.deviceId,
+    currDev.value.srvs.srvId,
+    currDev.value.srvs.wCharId,
     code
   );
   // .then(res=>{
@@ -29,9 +31,10 @@ const send = async (code: DataView) => {
 const notify = async () => {
   let msg = '';
   await BleClient.startNotifications(
-    currDev.deviceId,
-    bleStore.bleModule.srvId,
-    bleStore.bleModule.nCharId,
+    currDev.value.deviceId,
+    currDev.value.srvs.srvId,
+    currDev.value.srvs.nCharId,
+
     (resp) => {
       if (resp === null) return null;
       msg = parseNotifications(resp);
@@ -162,8 +165,41 @@ const disConnect = async (dev: lBleDev) => {
   return false;
 };
 
+type BleSrv = {
+  srvId: string;
+  wCharId: string;
+  nCharId: string;
+};
+
+type BleModule = {
+  label: string;
+  value: BleSrv;
+};
+
+const bleModules = <BleModule[]>[
+  {
+    label: 'st',
+    value: {
+      srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
+      wCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write
+      nCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //   notify
+    },
+  },
+  {
+    label: 'dx',
+    value: {
+      // dx: 大熊智能
+      srvId: '0000ffe0-0000-1000-8000-00805f9b34fb',
+      wCharId: '0000ffe1-0000-1000-8000-00805f9b34fb', //  write
+      nCharId: '0000ffe2-0000-1000-8000-00805f9b34fb', //   notify
+    },
+  },
+];
+
 export {
-  bleDev,
+  BleSrv,
+  BleModule,
+  bleModules,
   encode,
   flash_test_encode,
   send,

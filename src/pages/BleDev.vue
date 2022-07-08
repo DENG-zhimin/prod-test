@@ -55,7 +55,7 @@
         <q-select
           dense
           outlined
-          v-model="bleModule"
+          v-model="selectDev.srvs"
           :options="bleModules"
           map-options
           emit-value
@@ -70,16 +70,11 @@
 import { defineComponent, computed, onBeforeMount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
-import { lBleDev, useBleStore, BleSrv } from 'src/stores/ble-store';
+import { lBleDev, useBleStore } from 'src/stores/ble-store';
 import { useQuasar } from 'quasar';
-import { connect, disConnect } from 'src/utils/ble';
+import { connect, disConnect, bleModules } from 'src/utils/ble';
 
 import TitleBar from 'src/components/TitleBar.vue';
-
-type BleModule = {
-  label: string;
-  value: BleSrv;
-};
 
 export default defineComponent({
   name: 'BleDev',
@@ -88,30 +83,7 @@ export default defineComponent({
     const $q = useQuasar();
     const route = useRoute();
     const bleStore = useBleStore();
-    const { bleModule, cntdDevs, HBCntdDevs, selectDev } =
-      storeToRefs(bleStore);
-
-    const bleModules = <BleModule[]>[
-      {
-        label: 'st',
-        value: {
-          srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
-          wCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write
-          nCharId: '0000fda1-0000-1000-8000-00805f9b34fb', //   notify
-        },
-      },
-      {
-        label: 'dx',
-        value: {
-          // dx: 大熊智能
-          srvId: '0000ffe0-0000-1000-8000-00805f9b34fb',
-          wCharId: '0000ffe1-0000-1000-8000-00805f9b34fb', //  write
-          nCharId: '0000ffe2-0000-1000-8000-00805f9b34fb', //   notify
-        },
-      },
-    ];
-
-    bleModule.value = bleModules[0].value;
+    const { cntdDevs, HBCntdDevs, selectDev } = storeToRefs(bleStore);
 
     const devName = computed(() => {
       let name = <string>'';
@@ -180,7 +152,6 @@ export default defineComponent({
     });
 
     return {
-      bleModule,
       bleModules,
       devName,
       chgName,

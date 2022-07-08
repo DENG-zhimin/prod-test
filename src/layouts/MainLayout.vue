@@ -11,7 +11,7 @@
           />
         </div>
         <q-space></q-space>
-        <div class="row justify-center text-bold q-mr-lg">AOI TESTING</div>
+        <div class="row justify-center text-bold q-mr-lg">AOI LTD</div>
         <q-space></q-space>
 
         <div>

@@ -31,6 +31,7 @@
       <div class="col-12 row justify-center" v-if="error">
         {{ error }}
       </div>
+      <!-- <div class="q-pa-lg">默认pin码： 112233</div> -->
     </div>
   </q-page>
 </template>
@@ -94,10 +95,10 @@ export default defineComponent({
 
     const connBle = async (ble: BleDevice) => {
       await BleClient.connect(ble.deviceId, () => {
-        // ondisconnected
-        const lBle = <lBleDev>ble;
-        lBle.connected = false;
-        bleStore.disconnect(lBle);
+        // callback on disconnect event
+        const lBle = <lBleDev>ble; // change to extended type
+        lBle.connected = false; // add status property
+        bleStore.disconnect(lBle); // update ble status on pinia
         $q.notify({ message: ble.deviceId + ' 蓝牙连接已断开' });
       })
         .then(() => {

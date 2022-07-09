@@ -80,24 +80,6 @@ export default defineComponent({
 
     const getDev = () => {
       router.push('/ble');
-      /* if (saveFlag.value === false) {
-        $q.dialog({
-          dark: true,
-          title: 'Confirm',
-          message: 'Data changed! Leave without SAVE?',
-          persistent: true,
-          cancel: true,
-        })
-          .onOk(() => {
-            console.log('OK');
-            router.push('/bledev');
-          })
-          .onCancel(() => {
-            console.log('cancelled');
-          });
-      } else {
-        router.push('/BlePage');
-      } */
     };
 
     onBeforeMount(() => {

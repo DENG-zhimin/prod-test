@@ -1,6 +1,6 @@
 <template>
   <q-page class="column items-center">
-    <h2>Analysis</h2>
+    <div class="row justify-center text-h5 q-pa-md">数据分析</div>
     <div class="row justify-center">
       <q-file
         clearable
@@ -9,19 +9,24 @@
         v-model="testFile"
         @update:model-value="onFileChange()"
       />
+      <q-btn
+        size="sm"
+        class="q-ma-none q-ml-md"
+        label="生成数据"
+        @click="genData()"
+      />
     </div>
     <div class="row justify-end q-my-sm">
       <!-- <q-btn @click="readTestReportDir()" label="getDirContent"></q-btn> -->
     </div>
-    <div class="column justify-center">
-      <div id="chart" style="height: 300px; width: 500px"></div>
-      <!-- {{ chart }} -->
+    <div class="row justify-center full-width q-pa-sm">
+      <div id="chart" class="full-width"></div>
     </div>
-    <div class="column justify-center">
+    <!-- <div class="column justify-center">
       <div v-for="(line, index) in chartData" :key="index">
         {{ line }}
       </div>
-    </div>
+    </div> -->
   </q-page>
 </template>
 
@@ -101,6 +106,17 @@ export default defineComponent({
       reader.readAsText(testFile.value);
     };
 
+    const genData = async () => {
+      chartData.value.length = 0;
+      for (let i = 0; i < 100; i++) {
+        chartData.value.push({
+          count: i,
+          value: Math.floor(Math.random() * 10),
+        });
+      }
+      line.value.changeData(chartData.value);
+    };
+
     return {
       readTestReport,
       readTestReportDir,
@@ -109,6 +125,7 @@ export default defineComponent({
       fileContent,
       chartData,
       onFileChange,
+      genData,
     };
   },
 });

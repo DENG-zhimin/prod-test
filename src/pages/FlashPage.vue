@@ -152,7 +152,7 @@ import { KeepAwake } from '@capacitor-community/keep-awake';
 import { send, parseNotifications, flash_test_encode } from 'src/utils/ble';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 import { useBleStore, lBleDev } from 'src/stores/ble-store';
-import { formatTime } from 'src/utils/comm';
+import { formatTime, tightFormatTime } from 'src/utils/comm';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 type FlashFeedback = {
@@ -198,7 +198,18 @@ export default defineComponent({
     const enableThreshold = ref('1');
     const threshold = ref(<number | string>1);
 
-    const testFB = ref(<FlashFeedback[]>[]); // testing records data array
+    const testFB = ref(<FlashFeedback[]>[
+      { count: 2, time: '2022-07-08 18:33:06:760', fb: '4' },
+      { count: 3, time: '2022-07-08 18:33:06:760', fb: '5' },
+      { count: 4, time: '2022-07-08 18:33:06:760', fb: '4' },
+      { count: 5, time: '2022-07-08 18:33:06:760', fb: '6' },
+      { count: 6, time: '2022-07-08 18:33:06:760', fb: '4' },
+      { count: 7, time: '2022-07-08 18:33:06:760', fb: '3' },
+      { count: 8, time: '2022-07-08 18:33:06:760', fb: '4' },
+      { count: 9, time: '2022-07-08 18:33:06:760', fb: '6' },
+      { count: 10, time: '2022-07-08 18:33:06:760', fb: '4' },
+      { count: 11, time: '2022-07-08 18:33:06:760', fb: '7' },
+    ]); // testing records data array
 
     const intervalHandler = ref();
 
@@ -211,7 +222,8 @@ export default defineComponent({
         (res) => {
           receiveCount.value++;
           let time = new Date();
-          let t = formatTime(time);
+          let t = formatTime(time); // 2022-06-10 10:10:10:888
+          // t = t.substring(t.length -12);
           let fb = parseNotifications(res);
           let singleFB = <FlashFeedback>{
             time: t,
@@ -366,8 +378,7 @@ export default defineComponent({
         }
 
         const t = new Date();
-        const tMark =
-          t.getSeconds().toString() + t.getMilliseconds().toString();
+        let tMark = tightFormatTime(t);
         const filename =
           prodName.value +
           '-' +
@@ -414,14 +425,11 @@ export default defineComponent({
     };
 
     const triggerExport = () => {
-      console.log(prodName.value, prodName.value.length);
       if (prodName.value === '') {
         $q.notify({
           message: '没有填写产品名称',
         });
       } else {
-        console.log(prodName.value, prodName.value.length);
-        console.log('start export');
         showExportDialog.value = false; // hide prod info dialog
         exportReport(); // trigger export
       }

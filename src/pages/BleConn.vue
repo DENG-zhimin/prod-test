@@ -69,7 +69,7 @@ export default defineComponent({
     const scanTime = 20000;
 
     const scan = async () => {
-      results.value.length = 0;
+      results.value.length = 0; // scanning devices list
       // tried_scanning.value = true;
       try {
         if (isMobile) {
@@ -79,6 +79,7 @@ export default defineComponent({
             if (rssi > -90) {
               results.value.push(res.device);
             }
+          }).finally(() => {
             scanning.value = false;
           });
           setTimeout(() => {

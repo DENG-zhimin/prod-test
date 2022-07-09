@@ -149,7 +149,8 @@ const getConnDev = async function (): lBleDev[] {
 
 const connect = async (dev: lBleDev) => {
   await BleClient.connect(dev.deviceId).then(() => {
-    bleStore.cntdDevs.push(dev);
+    dev.connected = true; // change connected status
+    bleStore.cntdDevs.push(dev); // add to connted dev array
   });
 };
 

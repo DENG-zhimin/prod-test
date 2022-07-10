@@ -24,7 +24,7 @@ const MainMenu: Menu[] = [
   },
   {
     title: '数据分析',
-    path: 'analysis',
+    path: 'reportAnalysis',
     icon: 'assessment',
     color: 'red-5',
     name: '',

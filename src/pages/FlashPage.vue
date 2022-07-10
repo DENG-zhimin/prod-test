@@ -115,7 +115,7 @@
                 ' 时间：' +
                 test.time.substring(test.time.length - 12) +
                 ' 亮度：' +
-                test.fb
+                test.value
               }}
             </q-item-section>
           </q-item>
@@ -255,11 +255,11 @@ export default defineComponent({
           let time = new Date();
           let t = formatTime(time); // 2022-06-10 10:10:10:888
           // t = t.substring(t.length -12);
-          let fb = parseNotifications(res);
+          let val = parseNotifications(res);
           let singleFB = <FlashFeedback>{
             time: t,
             time2: time.getTime(),
-            fb: fb,
+            value: val,
             count: receiveCount.value,
           };
           testResult.value.unshift(singleFB);
@@ -469,7 +469,7 @@ export default defineComponent({
 
     const goAnalysis = () => {
       // exportReport(); // trigger export
-      router.push('/analysis');
+      router.push('/dataAnalysis');
     };
 
     onBeforeMount(() => {

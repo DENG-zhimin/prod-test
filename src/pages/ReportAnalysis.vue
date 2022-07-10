@@ -1,6 +1,6 @@
 <template>
   <q-page class="column items-center">
-    <div class="row justify-center text-h5 q-pa-md">数据分析</div>
+    <title-bar title="数据分析" class="full-width"></title-bar>
     <div class="row justify-center">
       <q-file
         clearable
@@ -22,11 +22,12 @@
     <div class="row justify-center full-width q-pa-sm">
       <div id="chart" class="full-width"></div>
     </div>
-    <!-- <div class="column justify-center">
-      <div v-for="(line, index) in chartData" :key="index">
+    <div class="column justify-center">
+      <div v-for="(line, index) in flashStore.testResult" :key="index">
         {{ line }}
+        <q-separator></q-separator>
       </div>
-    </div> -->
+    </div>
   </q-page>
 </template>
 
@@ -34,11 +35,15 @@
 import { defineComponent, ref, onMounted } from 'vue';
 import { Filesystem, Encoding, Directory } from '@capacitor/filesystem';
 import { Line } from '@antv/g2plot';
+import { useFlashStore } from 'src/stores/flash-store';
+import TitleBar from 'src/components/TitleBar.vue';
 
 export default defineComponent({
-  name: 'AnalysisPage',
-  components: {},
+  name: 'DataAnalysis',
+  components: { TitleBar },
   setup() {
+    const flashStore = useFlashStore();
+
     const reader = new FileReader();
     const testFile = ref(<File>{});
     const fileContent = ref(<string[]>[]);
@@ -118,6 +123,8 @@ export default defineComponent({
     };
 
     return {
+      flashStore,
+
       readTestReport,
       readTestReportDir,
       dirContent,

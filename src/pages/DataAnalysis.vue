@@ -62,7 +62,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, onBeforeMount } from 'vue';
+import {
+  defineComponent,
+  ref,
+  onMounted,
+  onBeforeMount,
+  onBeforeUnmount,
+} from 'vue';
 import { Line, Column } from '@antv/g2plot';
 import { useFlashStore, FlashFeedback } from 'src/stores/flash-store';
 import TitleBar from 'src/components/TitleBar.vue';
@@ -162,7 +168,11 @@ export default defineComponent({
       try {
         if ($q.platform.is.mobile) {
           // mobile download
-          chkDir();
+          // chkDir();
+          Filesystem.mkdir({
+            path: 'test-report/',
+            directory: Directory.Documents,
+          });
 
           const res = await Filesystem.writeFile({
             path: 'test-report/' + filename,
@@ -199,7 +209,7 @@ export default defineComponent({
       }
     };
 
-    const chkDir = async () => {
+    /* const chkDir = async () => {
       const res = Filesystem.readdir({
         path: 'test-report',
         directory: Directory.Documents,
@@ -211,7 +221,7 @@ export default defineComponent({
           directory: Directory.Documents,
         });
       }
-    };
+    }; */
     const getReportHeader = async () => {
       // generate report header
       let stream = prodName.value + '-' + prodModel.value + ' 测试报告' + '\n';
@@ -268,8 +278,14 @@ export default defineComponent({
         yField: 'count',
       });
 
+      console.log('mounted');
       line.value.render();
       column.value.render();
+    });
+
+    onBeforeUnmount(() => {
+      line.value.destroy();
+      column.value.destroy();
     });
 
     return {

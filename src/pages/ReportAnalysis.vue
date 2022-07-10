@@ -1,31 +1,34 @@
 <template>
   <q-page class="column items-center">
     <title-bar title="数据分析" class="full-width"></title-bar>
-    <div class="row justify-center">
-      <q-file
-        clearable
-        outlined
-        label="选择文件"
-        v-model="testFile"
-        @update:model-value="onFileChange()"
-      />
-      <q-btn
-        size="sm"
-        class="q-ma-none q-ml-md"
-        label="生成数据"
-        @click="genData()"
-      />
-    </div>
-    <div class="row justify-end q-my-sm">
-      <!-- <q-btn @click="readTestReportDir()" label="getDirContent"></q-btn> -->
-    </div>
-    <div class="row justify-center full-width q-pa-sm">
-      <div id="chart" class="full-width"></div>
-    </div>
-    <div class="column justify-center">
-      <div v-for="(line, index) in flashStore.testResult" :key="index">
-        {{ line }}
-        <q-separator></q-separator>
+    <div class="text-h5">ANALYSIS</div>
+    <div v-show="none">
+      <div class="row justify-center">
+        <q-file
+          clearable
+          outlined
+          label="选择文件"
+          v-model="testFile"
+          @update:model-value="onFileChange()"
+        />
+        <q-btn
+          size="sm"
+          class="q-ma-none q-ml-md"
+          label="生成数据"
+          @click="genData()"
+        />
+      </div>
+      <div class="row justify-end q-my-sm">
+        <!-- <q-btn @click="readTestReportDir()" label="getDirContent"></q-btn> -->
+      </div>
+      <div class="row justify-center full-width q-pa-sm">
+        <div id="chart" class="full-width"></div>
+      </div>
+      <div class="column justify-center">
+        <div v-for="(line, index) in flashStore.testResult" :key="index">
+          {{ line }}
+          <q-separator></q-separator>
+        </div>
       </div>
     </div>
   </q-page>

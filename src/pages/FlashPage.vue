@@ -178,7 +178,7 @@ export default defineComponent({
       KeepAwake.keepAwake();
     }
 
-    const flastStore = useFlashStore();
+    const flashStore = useFlashStore();
     const {
       prodName,
       prodModel,
@@ -195,8 +195,7 @@ export default defineComponent({
       threshold,
 
       testResult,
-      reportHeader,
-    } = storeToRefs(flastStore);
+    } = storeToRefs(flashStore);
 
     const bleStore = useBleStore();
     const { currDev } = storeToRefs(bleStore);
@@ -206,41 +205,7 @@ export default defineComponent({
       return testFlag.value === true || currDev.value.deviceId === '';
     });
 
-    // const showExportDialog = ref(false);
-
-    // const prodName = ref(''); // testing product model
-    // const prodModel = ref(''); // testing product model
-
-    // const stopReason = ref(''); // as show on Name.
-    // const continueTimes = ref(1); // 连闪次数
-    // const continueSilence = ref(0); // 连闪间隔时间
-    // const cycleSilence = ref(1000); // 周期间隔时间
-    // const minimumPeriod = ref(10); // minimum period time
-    // const counter = ref(0); // time slice counter, counter for testing interval
-
-    // const sendCount = ref(0); // how many commands sent
-    // const receiveCount = ref(0); // how many feedbacks received
-
-    // const error = ref(''); // error msg
-
-    // const enableThreshold = ref('1');
-    // const threshold = ref(<number | string>1);
-
     const router = useRouter();
-
-    /*     const testResult = ref(<FlashFeedback[]>[
-      { count: 1, time: '2022-07-08 18:33:06:760', fb: '2' },
-      { count: 2, time: '2022-07-08 18:33:06:760', fb: '4' },
-      { count: 3, time: '2022-07-08 18:33:06:760', fb: '5' },
-      { count: 4, time: '2022-07-08 18:33:06:760', fb: '4' },
-      { count: 5, time: '2022-07-08 18:33:06:760', fb: '6' },
-      { count: 6, time: '2022-07-08 18:33:06:760', fb: '4' },
-      { count: 7, time: '2022-07-08 18:33:06:760', fb: '3' },
-      { count: 8, time: '2022-07-08 18:33:06:760', fb: '4' },
-      { count: 9, time: '2022-07-08 18:33:06:760', fb: '6' },
-      { count: 10, time: '2022-07-08 18:33:06:760', fb: '4' },
-      { count: 11, time: '2022-07-08 18:33:06:760', fb: '7' },
-    ]); // testing records data array */
 
     const intervalHandler = ref();
 
@@ -368,47 +333,8 @@ export default defineComponent({
 
     type FileWriteRes = { uri: string };
 
-    const genReportHeader = async () => {
-      // generate report header
-      let stream = prodName.value + '-' + prodModel.value + ' 测试报告' + '\n';
-      stream += '报告生成时间,' + formatTime(new Date()) + '\n';
-      stream +=
-        '测试参数,' +
-        '连闪次数,' +
-        continueTimes.value +
-        ',' +
-        '连闪间隔时间（毫秒）,' +
-        continueSilence.value +
-        ',' +
-        '周期间隔时间（毫秒）,' +
-        cycleSilence.value +
-        '\n';
-
-      stream +=
-        '启用阀值,' +
-        (enableThreshold.value ? '是' : '否') +
-        ',' +
-        '阀值,' +
-        threshold.value +
-        '\n';
-      stream +=
-        '次数统计,' +
-        '发送数,' +
-        sendCount.value +
-        ',' +
-        '接收数,' +
-        receiveCount.value +
-        '\n';
-      stream += '停止原因,' + stopReason.value + '\n';
-      stream += '序号,时间,读数\n';
-
-      reportHeader.value = stream;
-    };
-
     const exportReport = async () => {
       try {
-        genReportHeader(); // string
-
         // read test result
         for (let i = testResult.value.length - 1; i >= 0; i--) {
           stream +=

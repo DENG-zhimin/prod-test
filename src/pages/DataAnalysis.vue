@@ -26,6 +26,13 @@
           测试信号数：{{ flashStore.sendCount }} - 反馈信号数：{{
             flashStore.receiveCount
           }}
+          <q-space></q-space>
+          <q-btn
+            color="primary"
+            size="sm"
+            @click="exportReport()"
+            label="导出数据"
+          />
         </div>
       </div>
       <div
@@ -59,14 +66,32 @@ import { defineComponent, ref, onMounted, onBeforeMount } from 'vue';
 import { Line, Column } from '@antv/g2plot';
 import { useFlashStore, FlashFeedback } from 'src/stores/flash-store';
 import TitleBar from 'src/components/TitleBar.vue';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { useQuasar } from 'quasar';
+import { storeToRefs } from 'pinia';
+import { tightFormatTime, formatTime } from 'src/utils/comm';
 
 export default defineComponent({
   name: 'DataAnalysisPage',
   components: { TitleBar },
   setup() {
+    const $q = useQuasar();
     const flashStore = useFlashStore();
     const line = ref(); // line chart handler
     const column = ref(); // column chart handler
+
+    const {
+      prodName,
+      prodModel,
+      stopReason,
+      continueTimes,
+      continueSilence,
+      cycleSilence,
+      sendCount,
+      receiveCount,
+      enableThreshold,
+      threshold,
+    } = storeToRefs(flashStore);
 
     type LineData = {
       count: number;
@@ -120,6 +145,111 @@ export default defineComponent({
       return ret;
     };
 
+    const exportReport = async () => {
+      let stream = await getReportHeader();
+      lineData.value.forEach((line) => {
+        stream += line.count + ',' + line.value + '\n';
+      });
+
+      const filename =
+        prodName.value +
+        '-' +
+        prodModel.value +
+        '-' +
+        tightFormatTime(new Date()) +
+        '-' +
+        'test-report.csv';
+      try {
+        if ($q.platform.is.mobile) {
+          // mobile download
+          chkDir();
+
+          const res = await Filesystem.writeFile({
+            path: 'test-report/' + filename,
+            data: stream,
+            directory: Directory.Documents, // target directory file://Documents
+            encoding: Encoding.UTF8,
+          });
+          const ret = res as FileWriteRes;
+          $q.notify({
+            message: ret.uri,
+          });
+        } else {
+          // web download
+          const stream2 = stream.split('');
+          let blob = new Blob(stream2);
+          const elink = document.createElement('a');
+
+          elink.download = filename;
+          elink.style.display = 'none';
+          elink.href = URL.createObjectURL(blob);
+          document.body.appendChild(elink);
+          elink.click();
+          $q.notify({
+            message: 'report downloaded ',
+          });
+          URL.revokeObjectURL(elink.href);
+          elink.remove();
+        }
+      } catch (err) {
+        const msg = (err as Error).message;
+        $q.notify({
+          message: msg,
+        });
+      }
+    };
+
+    const chkDir = async () => {
+      const res = Filesystem.readdir({
+        path: 'test-report',
+        directory: Directory.Documents,
+      });
+
+      if (!res) {
+        Filesystem.mkdir({
+          path: 'test-report',
+          directory: Directory.Documents,
+        });
+      }
+    };
+    const getReportHeader = async () => {
+      // generate report header
+      let stream = prodName.value + '-' + prodModel.value + ' 测试报告' + '\n';
+      stream += '报告生成时间,' + formatTime(new Date()) + '\n';
+      stream +=
+        '测试参数,' +
+        '连闪次数,' +
+        continueTimes.value +
+        ',' +
+        '连闪间隔时间（毫秒）,' +
+        continueSilence.value +
+        ',' +
+        '周期间隔时间（毫秒）,' +
+        cycleSilence.value +
+        '\n';
+
+      stream +=
+        '阀值设置,' +
+        '启用,' +
+        (enableThreshold.value ? '是' : '否') +
+        ',' +
+        '阀值,' +
+        threshold.value +
+        '\n';
+      stream +=
+        '次数统计,' +
+        '发送数,' +
+        sendCount.value +
+        ',' +
+        '接收数,' +
+        receiveCount.value +
+        '\n';
+      stream += '停止原因,' + stopReason.value + '\n';
+      stream += '序号,读数\n';
+
+      return stream;
+    };
+
     onBeforeMount(() => {
       lineData.value = getLineData(flashStore.testResult);
       columnData.value = getColumnData(flashStore.testResult);
@@ -144,6 +274,7 @@ export default defineComponent({
 
     return {
       flashStore,
+      exportReport,
     };
   },
 });

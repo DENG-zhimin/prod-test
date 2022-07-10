@@ -100,31 +100,36 @@ export default defineComponent({
     } = storeToRefs(flashStore);
 
     type LineData = {
-      count: number;
+      count: string;
       value: number;
     };
     type ColumnData = {
-      count: number;
       value: string;
+      count: number;
     };
 
-    const lineData = ref(<LineData[]>[]);
-    const columnData = ref(<LineData[]>[]);
+    // const lineData = ref(<LineData[]>[]);
+    // const columnData = ref(<LineData[]>[]);
+    let lineData = <LineData[]>[];
+    let columnData = <LineData[]>[];
 
     const getLineData = (data: FlashFeedback[]) => {
-      const ret = <LineData>[];
+      const ret = <LineData[]>[];
       const len = data.length - 1;
+      if (len < 0) {
+        return [];
+      }
       for (let i = len; i >= 0; i--) {
         // test result is unshift added
         const d = data[i] as FlashFeedback;
-        ret.push({ count: d.count, value: parseInt(d.value) });
+        ret.push({ count: d.count.toString(), value: parseInt(d.value) });
       }
 
       return ret;
     };
 
     const getColumnData = (data: FlashFeedback[]) => {
-      const ret = <ColumnData[]>[];
+      let ret = <ColumnData[]>[];
       data.forEach((item) => {
         let isNew = 1;
         if (ret.length === 0) {
@@ -147,6 +152,8 @@ export default defineComponent({
           }
         }
       });
+
+      console.log(ret);
 
       return ret;
     };
@@ -209,19 +216,6 @@ export default defineComponent({
       }
     };
 
-    /* const chkDir = async () => {
-      const res = Filesystem.readdir({
-        path: 'test-report',
-        directory: Directory.Documents,
-      });
-
-      if (!res) {
-        Filesystem.mkdir({
-          path: 'test-report',
-          directory: Directory.Documents,
-        });
-      }
-    }; */
     const getReportHeader = async () => {
       // generate report header
       let stream = prodName.value + '-' + prodModel.value + ' 测试报告' + '\n';
@@ -261,24 +255,27 @@ export default defineComponent({
     };
 
     onBeforeMount(() => {
-      lineData.value = getLineData(flashStore.testResult);
-      columnData.value = getColumnData(flashStore.testResult);
+      lineData = getLineData(flashStore.testResult);
+      columnData = getColumnData(flashStore.testResult);
     });
 
     onMounted(() => {
       //
       line.value = new Line('chart', {
-        data: lineData.value,
+        data: lineData,
+        padding: 'auto',
         xField: 'count',
         yField: 'value',
+        yAxis: {
+          tickCount: 10,
+        },
       });
       column.value = new Column('columnPart', {
-        data: columnData.value,
+        data: columnData,
         xField: 'value',
         yField: 'count',
       });
 
-      console.log('mounted');
       line.value.render();
       column.value.render();
     });

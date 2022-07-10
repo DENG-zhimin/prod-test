@@ -2,7 +2,18 @@
   <q-page class="column items-center q-pa-sm">
     <div class="text-h5 q-my-sm">产品测试</div>
     <q-separator class="full-width" inset />
-    <div class="row full-width justify-evenly q-ma-md">
+    <div class="row justify-evenly q-pa-xs">
+      <q-input
+        class="col-4"
+        dense
+        outlined
+        v-model="prodName"
+        label="产品名称(必填)"
+      />
+      <q-input class="col-4" dense outlined v-model="prodModel" label="型号" />
+    </div>
+    <q-separator class="full-width" inset />
+    <div class="row full-width justify-evenly q-pa-xs q-mt-sm">
       <q-input
         class="col-3"
         dense
@@ -29,7 +40,7 @@
       />
     </div>
 
-    <div class="row justify-evenly full-width q-ma-md">
+    <div class="row justify-evenly full-width q-ma-xs">
       <q-input
         :disable="enableThreshold === '0'"
         class="col-4"
@@ -75,7 +86,7 @@
     <q-separator class="full-width"></q-separator>
     <div class="col column q-pa-sm full-width">
       <div
-        v-if="testFB.length > 0"
+        v-if="testResult.length > 0"
         class="row items-center justify-end q-pr-md"
       >
         <q-btn
@@ -87,8 +98,8 @@
         <q-btn
           class="q-ml-lg"
           color="primary"
-          label="生成报告"
-          @click="showExportDialog = true"
+          label="数据分析"
+          @click="goAnalysis()"
         ></q-btn>
       </div>
       <div
@@ -96,7 +107,7 @@
         style="overflow: auto; max-height: 450px"
       >
         <q-list separator dense>
-          <q-item v-for="test in testFB" :key="test.time">
+          <q-item v-for="test in testResult" :key="test.time">
             <q-item-section>
               {{
                 ' 序号：' +
@@ -112,10 +123,10 @@
       </div>
     </div>
     <div class="q-pa-sm">
-      <!-- {{ testFB }} -->
+      <!-- {{ testResult }} -->
       {{ error }}
     </div>
-    <q-dialog v-model="showExportDialog" persistent pointer-events="all">
+    <!-- <q-dialog v-model="showExportDialog" persistent pointer-events="all">
       <div class="column items-center q-gutter-sm bg-white q-pa-sm">
         <div class="row items-center q-pa-sm">生成测试报告</div>
         <q-separator class="full-width" inset></q-separator>
@@ -133,7 +144,7 @@
           />
         </div>
       </div>
-    </q-dialog>
+    </q-dialog> -->
   </q-page>
 </template>
 <script lang="ts">
@@ -154,13 +165,8 @@ import { BleClient } from '@capacitor-community/bluetooth-le';
 import { useBleStore, lBleDev } from 'src/stores/ble-store';
 import { formatTime, tightFormatTime } from 'src/utils/comm';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-
-type FlashFeedback = {
-  time: string;
-  fb: string;
-  count: number;
-  time2: number;
-};
+import { useRouter } from 'vue-router';
+import { FlashFeedback, useFlashStore } from 'src/stores/flash-store';
 
 export default defineComponent({
   name: 'FlashTestPage',
@@ -172,6 +178,26 @@ export default defineComponent({
       KeepAwake.keepAwake();
     }
 
+    const flastStore = useFlashStore();
+    const {
+      prodName,
+      prodModel,
+      stopReason,
+      continueTimes,
+      continueSilence,
+      cycleSilence,
+      minimumPeriod,
+      counter,
+      sendCount,
+      receiveCount,
+      error,
+      enableThreshold,
+      threshold,
+
+      testResult,
+      reportHeader,
+    } = storeToRefs(flastStore);
+
     const bleStore = useBleStore();
     const { currDev } = storeToRefs(bleStore);
 
@@ -179,26 +205,31 @@ export default defineComponent({
     const startFlag = computed(() => {
       return testFlag.value === true || currDev.value.deviceId === '';
     });
-    const showExportDialog = ref(false);
-    const prodName = ref(''); // testing product model
-    const prodModel = ref(''); // testing product model
 
-    const stopReason = ref(''); // as show on Name.
-    const continueTimes = ref(1); // 连闪次数
-    const continueSilence = ref(0); // 连闪间隔时间
-    const cycleSilence = ref(1000); // 周期间隔时间
-    const minimumPeriod = ref(10); // minimum period time
-    const counter = ref(0); // time slice counter, counter for testing interval
+    // const showExportDialog = ref(false);
 
-    const sendCount = ref(0); // how many commands sent
-    const receiveCount = ref(0); // how many feedbacks received
+    // const prodName = ref(''); // testing product model
+    // const prodModel = ref(''); // testing product model
 
-    const error = ref(''); // error msg
+    // const stopReason = ref(''); // as show on Name.
+    // const continueTimes = ref(1); // 连闪次数
+    // const continueSilence = ref(0); // 连闪间隔时间
+    // const cycleSilence = ref(1000); // 周期间隔时间
+    // const minimumPeriod = ref(10); // minimum period time
+    // const counter = ref(0); // time slice counter, counter for testing interval
 
-    const enableThreshold = ref('1');
-    const threshold = ref(<number | string>1);
+    // const sendCount = ref(0); // how many commands sent
+    // const receiveCount = ref(0); // how many feedbacks received
 
-    const testFB = ref(<FlashFeedback[]>[
+    // const error = ref(''); // error msg
+
+    // const enableThreshold = ref('1');
+    // const threshold = ref(<number | string>1);
+
+    const router = useRouter();
+
+    /*     const testResult = ref(<FlashFeedback[]>[
+      { count: 1, time: '2022-07-08 18:33:06:760', fb: '2' },
       { count: 2, time: '2022-07-08 18:33:06:760', fb: '4' },
       { count: 3, time: '2022-07-08 18:33:06:760', fb: '5' },
       { count: 4, time: '2022-07-08 18:33:06:760', fb: '4' },
@@ -209,7 +240,7 @@ export default defineComponent({
       { count: 9, time: '2022-07-08 18:33:06:760', fb: '6' },
       { count: 10, time: '2022-07-08 18:33:06:760', fb: '4' },
       { count: 11, time: '2022-07-08 18:33:06:760', fb: '7' },
-    ]); // testing records data array
+    ]); // testing records data array */
 
     const intervalHandler = ref();
 
@@ -231,7 +262,7 @@ export default defineComponent({
             fb: fb,
             count: receiveCount.value,
           };
-          testFB.value.unshift(singleFB);
+          testResult.value.unshift(singleFB);
           const ret = parseInt(fb); //return numbers
           if (typeof threshold.value === 'string') {
             threshold.value = parseInt(threshold.value);
@@ -259,6 +290,12 @@ export default defineComponent({
     };
 
     const startTest = async () => {
+      if (prodName.value === '') {
+        $q.notify({
+          message: '请填写测试产品名称',
+        });
+        return null;
+      }
       testFlag.value = true; // change status flag
       startReceive(); // start notify receiver
       cycleSend(); // start command sender
@@ -326,54 +363,60 @@ export default defineComponent({
       enableThreshold.value = '1';
       sendCount.value = 0;
       receiveCount.value = 0;
-      testFB.value.length = 0;
+      testResult.value.length = 0;
     };
 
     type FileWriteRes = { uri: string };
 
+    const genReportHeader = async () => {
+      // generate report header
+      let stream = prodName.value + '-' + prodModel.value + ' 测试报告' + '\n';
+      stream += '报告生成时间,' + formatTime(new Date()) + '\n';
+      stream +=
+        '测试参数,' +
+        '连闪次数,' +
+        continueTimes.value +
+        ',' +
+        '连闪间隔时间（毫秒）,' +
+        continueSilence.value +
+        ',' +
+        '周期间隔时间（毫秒）,' +
+        cycleSilence.value +
+        '\n';
+
+      stream +=
+        '启用阀值,' +
+        (enableThreshold.value ? '是' : '否') +
+        ',' +
+        '阀值,' +
+        threshold.value +
+        '\n';
+      stream +=
+        '次数统计,' +
+        '发送数,' +
+        sendCount.value +
+        ',' +
+        '接收数,' +
+        receiveCount.value +
+        '\n';
+      stream += '停止原因,' + stopReason.value + '\n';
+      stream += '序号,时间,读数\n';
+
+      reportHeader.value = stream;
+    };
+
     const exportReport = async () => {
       try {
-        let stream =
-          prodName.value + '-' + prodModel.value + ' 测试报告' + '\n';
-        stream += '报告生成时间,' + formatTime(new Date()) + '\n';
-        stream +=
-          '测试参数,' +
-          '连闪次数,' +
-          continueTimes.value +
-          ',' +
-          '连闪间隔时间（毫秒）,' +
-          continueSilence.value +
-          ',' +
-          '周期间隔时间（毫秒）,' +
-          cycleSilence.value +
-          '\n';
+        genReportHeader(); // string
 
-        stream +=
-          '启用阀值,' +
-          (enableThreshold.value ? '是' : '否') +
-          ',' +
-          '阀值,' +
-          threshold.value +
-          '\n';
-        stream +=
-          '次数统计,' +
-          '发送数,' +
-          sendCount.value +
-          ',' +
-          '接收数,' +
-          receiveCount.value +
-          '\n';
-        stream += '停止原因,' + stopReason.value + '\n';
-
-        stream += '序号,时间,读数\n';
         // read test result
-        for (let i = testFB.value.length - 1; i >= 0; i--) {
+        for (let i = testResult.value.length - 1; i >= 0; i--) {
           stream +=
-            testFB.value[i].count +
+            testResult.value[i].count +
             ',' +
-            testFB.value[i].time +
+            testResult.value[i].time +
             ',' +
-            testFB.value[i].fb +
+            testResult.value[i].fb +
             '\n';
         }
 
@@ -424,15 +467,9 @@ export default defineComponent({
       }
     };
 
-    const triggerExport = () => {
-      if (prodName.value === '') {
-        $q.notify({
-          message: '没有填写产品名称',
-        });
-      } else {
-        showExportDialog.value = false; // hide prod info dialog
-        exportReport(); // trigger export
-      }
+    const goAnalysis = () => {
+      // exportReport(); // trigger export
+      router.push('/analysis');
     };
 
     onBeforeMount(() => {
@@ -498,6 +535,7 @@ export default defineComponent({
     });
 
     return {
+      testResult,
       prodName,
       prodModel,
       currDev,
@@ -506,14 +544,13 @@ export default defineComponent({
       threshold,
       sendCount,
       receiveCount,
-      testFB,
       startFlag,
       testFlag,
       continueTimes,
       continueSilence,
       cycleSilence,
       stopReason,
-      showExportDialog,
+      // showExportDialog,
       error,
       startTest,
       startReceive,
@@ -522,7 +559,7 @@ export default defineComponent({
       stopReceive,
       resetParam,
       exportReport,
-      triggerExport,
+      goAnalysis,
     };
   },
 });

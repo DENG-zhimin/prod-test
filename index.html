@@ -42,15 +42,15 @@
     <!-- quasar:entry-point -->
   </body>
   <style lang="scss" scoped>
-    @media screen and (orientation: landscape) {
+    /* @media screen and (orientation: landscape) {
       body {
         transform-origin: 0 0;
         transform: rotateZ(90deg) translateY(-100%);
       }
-    }
+    } */
   </style>
   <script>
-    window.addEventListener('resize', forcePortraitScreen());
+    // window.addEventListener('resize', forcePortraitScreen());
     function forcePortraitScreen() {
       const body = document.getElementsByTagName('body')[0];
       const html = document.getElementsByTagName('html')[0];

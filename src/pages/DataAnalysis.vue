@@ -153,8 +153,6 @@ export default defineComponent({
         }
       });
 
-      console.log(ret);
-
       return ret;
     };
 

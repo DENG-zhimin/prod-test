@@ -160,9 +160,11 @@ export default defineComponent({
 
     const exportReport = async () => {
       let stream = await getReportHeader();
-      lineData.value.forEach((line) => {
-        stream += line.count + ',' + line.value + '\n';
-      });
+      const data = flashStore.testResult;
+      for (let i = data.length - 1; i >= 0; i--) {
+        stream +=
+          data[i].count + ',' + data[i].value + ',' + data[i].time + '\n';
+      }
 
       const filename =
         prodName.value +

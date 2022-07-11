@@ -70,10 +70,6 @@
           type="number"
           v-model="thresholdActionTime"
         />
-
-        <!-- <div class="row items-center">启用阀值：</div>
-        <q-radio v-model="enableThreshold" val="1" label="是" />
-        <q-radio v-model="enableThreshold" val="0" label="否" /> -->
       </div>
       <div v-else>
         <q-space></q-space>
@@ -213,7 +209,6 @@ export default defineComponent({
       sendCount,
       receiveCount,
       error,
-      enableThreshold,
       threshold,
 
       testResult,
@@ -262,24 +257,20 @@ export default defineComponent({
           };
           testResult.value.unshift(singleFB);
           const ret = parseInt(val); //return numbers
-          if (typeof threshold.value === 'string') {
-            threshold.value = parseInt(threshold.value);
-          }
-          if (enableThreshold.value === '1') {
-            if (ret < threshold.value) {
-              switch (thresholdAction.value) {
-                // 阀值动作
-                case 1: // 停止
-                  stopReason.value = '触发阀值停止';
-                  stopTest();
-                  break;
-                case 2: // 暂停后继续
-                  stopTest();
-                  setTimeout(() => {
-                    startTest();
-                  }, restTime.value);
-                  break;
-              }
+          threshold.value = parseInt(threshold.value);
+          if (ret < threshold.value) {
+            switch (thresholdAction.value) {
+              // 阀值动作
+              case 1: // 停止
+                stopReason.value = '触发阀值停止';
+                stopTest();
+                break;
+              case 2: // 暂停后继续
+                stopTest();
+                setTimeout(() => {
+                  startTest();
+                }, restTime.value);
+                break;
             }
           }
         }
@@ -377,7 +368,6 @@ export default defineComponent({
       continueTimes.value = 1;
       cycleSilence.value = 1000;
       threshold.value = 5;
-      enableThreshold.value = '1';
       sendCount.value = 0;
       receiveCount.value = 0;
       testResult.value.length = 0;
@@ -470,7 +460,6 @@ export default defineComponent({
       prodModel,
       currDev,
       minimumPeriod,
-      enableThreshold,
       threshold,
       sendCount,
       receiveCount,

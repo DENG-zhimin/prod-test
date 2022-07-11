@@ -20,8 +20,7 @@ const counter = 0; // time slice counter, counter for testing interval
 const sendCount = 0; // how many commands sent
 const receiveCount = 0; // how many feedbacks received
 const error = ''; // error msg
-const enableThreshold = '1';
-const threshold = <number | string>1;
+const threshold = <number | string>1; // default threshold 1
 
 export const useFlashStore = defineStore('flash', {
   state: () => ({
@@ -41,7 +40,6 @@ export const useFlashStore = defineStore('flash', {
     sendCount,
     receiveCount,
     error,
-    enableThreshold,
     threshold,
 
     testResult: <FlashFeedback[]>[],

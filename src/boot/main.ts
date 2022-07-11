@@ -50,7 +50,7 @@ export default boot(({ /* Vue, app, store */ router }) => {
         next();
       }
     } */
-    if (from.path === '/flash') {
+    if (from.fullPath === '/flash') {
       if (testFlag.value === true) {
         showMsg.value = true;
       } else {

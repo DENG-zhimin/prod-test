@@ -108,10 +108,12 @@ export default defineComponent({
       count: number;
     };
 
+    type FileWriteRes = { uri: string };
+
     // const lineData = ref(<LineData[]>[]);
     // const columnData = ref(<LineData[]>[]);
-    let lineData = <LineData[]>[];
-    let columnData = <LineData[]>[];
+    const lineData = ref(<LineData[]>[]);
+    const columnData = ref(<ColumnData[]>[]);
 
     const getLineData = (data: FlashFeedback[]) => {
       const ret = <LineData[]>[];
@@ -253,14 +255,14 @@ export default defineComponent({
     };
 
     onBeforeMount(() => {
-      lineData = getLineData(flashStore.testResult);
-      columnData = getColumnData(flashStore.testResult);
+      lineData.value = getLineData(flashStore.testResult);
+      columnData.value = getColumnData(flashStore.testResult);
     });
 
     onMounted(() => {
       //
       line.value = new Line('chart', {
-        data: lineData,
+        data: lineData.value,
         padding: 'auto',
         xField: 'count',
         yField: 'value',
@@ -269,7 +271,7 @@ export default defineComponent({
         },
       });
       column.value = new Column('columnPart', {
-        data: columnData,
+        data: columnData.value,
         xField: 'value',
         yField: 'count',
       });

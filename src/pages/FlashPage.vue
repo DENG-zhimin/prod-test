@@ -163,8 +163,7 @@ import { KeepAwake } from '@capacitor-community/keep-awake';
 import { send, parseNotifications, flash_test_encode } from 'src/utils/ble';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 import { useBleStore, lBleDev } from 'src/stores/ble-store';
-import { formatTime, tightFormatTime } from 'src/utils/comm';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { formatTime } from 'src/utils/comm';
 import { useRouter } from 'vue-router';
 import { FlashFeedback, useFlashStore } from 'src/stores/flash-store';
 
@@ -180,6 +179,7 @@ export default defineComponent({
 
     const flashStore = useFlashStore();
     const {
+      testFlag,
       prodName,
       prodModel,
       stopReason,
@@ -200,7 +200,6 @@ export default defineComponent({
     const bleStore = useBleStore();
     const { currDev } = storeToRefs(bleStore);
 
-    const testFlag = ref(false); // true: is testing, false: stpped
     const startFlag = computed(() => {
       return testFlag.value === true || currDev.value.deviceId === '';
     });
@@ -228,7 +227,7 @@ export default defineComponent({
             count: receiveCount.value,
           };
           testResult.value.unshift(singleFB);
-          const ret = parseInt(fb); //return numbers
+          const ret = parseInt(val); //return numbers
           if (typeof threshold.value === 'string') {
             threshold.value = parseInt(threshold.value);
           }
@@ -331,68 +330,6 @@ export default defineComponent({
       testResult.value.length = 0;
     };
 
-    type FileWriteRes = { uri: string };
-
-    const exportReport = async () => {
-      try {
-        // read test result
-        for (let i = testResult.value.length - 1; i >= 0; i--) {
-          stream +=
-            testResult.value[i].count +
-            ',' +
-            testResult.value[i].time +
-            ',' +
-            testResult.value[i].fb +
-            '\n';
-        }
-
-        const t = new Date();
-        let tMark = tightFormatTime(t);
-        const filename =
-          prodName.value +
-          '-' +
-          prodModel.value +
-          '-' +
-          tMark +
-          '-' +
-          'test-report.csv';
-        if ($q.platform.is.mobile) {
-          // mobile download
-          const res = await Filesystem.writeFile({
-            path: filename,
-            data: stream,
-            directory: Directory.Documents, // target directory file://Documents
-            encoding: Encoding.UTF8,
-          });
-          const ret = res as FileWriteRes;
-          $q.notify({
-            message: ret.uri,
-          });
-        } else {
-          // web download
-          const stream2 = stream.split('');
-          let blob = new Blob(stream2);
-          const elink = document.createElement('a');
-
-          elink.download = filename;
-          elink.style.display = 'none';
-          elink.href = URL.createObjectURL(blob);
-          document.body.appendChild(elink);
-          elink.click();
-          $q.notify({
-            message: 'report downloaded ',
-          });
-          URL.revokeObjectURL(elink.href);
-          elink.remove();
-        }
-      } catch (err) {
-        const msg = (err as Error).message;
-        $q.notify({
-          message: msg,
-        });
-      }
-    };
-
     const goAnalysis = () => {
       // exportReport(); // trigger export
       router.push('/dataAnalysis');
@@ -484,7 +421,6 @@ export default defineComponent({
       stopTest,
       stopReceive,
       resetParam,
-      exportReport,
       goAnalysis,
     };
   },

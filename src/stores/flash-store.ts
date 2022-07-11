@@ -7,6 +7,7 @@ export type FlashFeedback = {
   time2: number;
 };
 
+const testFlag = false;
 const prodName = ''; // testing product model
 const prodModel = ''; // testing product model
 const stopReason = ''; // as show on Name.
@@ -23,6 +24,7 @@ const threshold = <number | string>1;
 
 export const useFlashStore = defineStore('flash', {
   state: () => ({
+    testFlag,
     prodName,
     prodModel,
     stopReason,

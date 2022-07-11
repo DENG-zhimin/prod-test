@@ -1,4 +1,5 @@
 /* eslint-env node */
+// import { UserConfig as ViteUserConfig } from 'vite'
 
 /*
  * This file runs in a Node context (it's NOT transpiled by Babel), so use only
@@ -85,6 +86,19 @@ module.exports = configure(function (/* ctx */) {
           },
         ],
       ],
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              return id
+                .toString()
+                .split('node_modules/')[1]
+                .split('/')[0]
+                .toString();
+            }
+          },
+        },
+      },
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer

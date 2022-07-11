@@ -27,6 +27,8 @@ export const useFlashStore = defineStore('flash', {
   state: () => ({
     showMsg: false,
     testFlag,
+    thresholdAction: 0,
+    thresholdActionTime: 0,
     intervalHandler,
     prodName,
     prodModel,

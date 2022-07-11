@@ -40,20 +40,43 @@
       />
     </div>
 
-    <div class="row justify-evenly full-width q-ma-xs">
-      <q-input
-        :disable="enableThreshold === '0'"
-        class="col-4"
-        dense
-        outlined
-        label="阀值"
-        type="number"
-        v-model="threshold"
-      />
-      <div class="row items-center">
-        <div class="row items-center">启用阀值：</div>
+    <div class="row full-width q-ma-xs">
+      <div class="col-4 row items-center q-ml-md">
+        <q-select
+          label="阀值设置"
+          dense
+          outlined
+          v-model="thresholdAction"
+          :options="thresholdActionOptions"
+          map-options
+          emit-value
+        />
+      </div>
+      <div v-if="thresholdAction > 0" class="col-7 row justify-between">
+        <q-input
+          class="col-5"
+          dense
+          outlined
+          label="阀值"
+          type="number"
+          v-model="threshold"
+        />
+        <q-input
+          v-if="thresholdAction === 2"
+          class="col-5"
+          dense
+          outlined
+          label="暂停时间/秒"
+          type="number"
+          v-model="thresholdActionTime"
+        />
+
+        <!-- <div class="row items-center">启用阀值：</div>
         <q-radio v-model="enableThreshold" val="1" label="是" />
-        <q-radio v-model="enableThreshold" val="0" label="否" />
+        <q-radio v-model="enableThreshold" val="0" label="否" /> -->
+      </div>
+      <div v-else>
+        <q-space></q-space>
       </div>
     </div>
     <q-separator class="full-width" inset />
@@ -176,6 +199,8 @@ export default defineComponent({
     const {
       showMsg,
       testFlag,
+      thresholdAction,
+      thresholdActionTime,
       intervalHandler,
       prodName,
       prodModel,
@@ -194,6 +219,8 @@ export default defineComponent({
       testResult,
     } = storeToRefs(flashStore);
 
+    const intervalList = <number[]>[];
+
     const bleStore = useBleStore();
     const { currDev } = storeToRefs(bleStore);
 
@@ -202,6 +229,16 @@ export default defineComponent({
     });
 
     const router = useRouter();
+
+    const restTime = computed(() => {
+      return thresholdActionTime.value * 1000;
+    });
+
+    const thresholdActionOptions = [
+      { label: '关闭阀值', value: 0 },
+      { label: '停止测试', value: 1 },
+      { label: '暂停继续', value: 2 },
+    ];
 
     // const intervalHandler = ref();
 
@@ -228,9 +265,22 @@ export default defineComponent({
           if (typeof threshold.value === 'string') {
             threshold.value = parseInt(threshold.value);
           }
-          if (enableThreshold.value === '1' && ret < threshold.value) {
-            stopReason.value = '触发阀值停止';
-            stopTest();
+          if (enableThreshold.value === '1') {
+            if (ret < threshold.value) {
+              switch (thresholdAction.value) {
+                // 阀值动作
+                case 1: // 停止
+                  stopReason.value = '触发阀值停止';
+                  stopTest();
+                  break;
+                case 2: // 暂停后继续
+                  stopTest();
+                  setTimeout(() => {
+                    startTest();
+                  }, restTime.value);
+                  break;
+              }
+            }
           }
         }
       );
@@ -295,6 +345,8 @@ export default defineComponent({
           counter.value = 0;
         }
       }, minimumPeriod.value); //
+
+      intervalList.push(Number(intervalHandler.value));
     };
 
     const manualStopTest = async () => {
@@ -303,11 +355,15 @@ export default defineComponent({
     };
     const stopTest = async () => {
       testFlag.value = false;
-      clearInterval(Number(intervalHandler.value));
+      intervalList.forEach((intv) => {
+        // clear multiple times
+        // clearInterval(Number(intv));
+        clearInterval(intv);
+      });
       setTimeout(() => {
         // stop receive msg after 1000ms
         stopReceive();
-      }, 1000);
+      }, 500);
     };
 
     const sendComm = () => {
@@ -397,6 +453,9 @@ export default defineComponent({
     return {
       showMsg,
       testResult,
+      thresholdAction,
+      thresholdActionOptions,
+      thresholdActionTime,
       prodName,
       prodModel,
       currDev,

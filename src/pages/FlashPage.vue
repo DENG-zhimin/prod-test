@@ -23,7 +23,7 @@
         v-model="continueTimes"
       />
       <q-input
-        class="col-3"
+        class="col-4 q-mx-xs"
         dense
         outlined
         label="连闪间隔/毫秒"
@@ -31,7 +31,7 @@
         v-model="continueSilence"
       />
       <q-input
-        class="col-3"
+        class="col-4"
         dense
         outlined
         label="周期间隔/毫秒"
@@ -40,8 +40,8 @@
       />
     </div>
 
-    <div class="row full-width q-ma-xs">
-      <div class="col-4 row items-center q-ml-md">
+    <div class="row full-width justify-between">
+      <div class="col-4 row items-center">
         <q-select
           label="阀值设置"
           dense
@@ -52,9 +52,9 @@
           emit-value
         />
       </div>
-      <div v-if="thresholdAction > 0" class="col-7 row justify-between">
+      <div v-if="thresholdAction > 0" class="col-8 row justify-between">
         <q-input
-          class="col-5"
+          class="col-5 q-pl-sm"
           dense
           outlined
           label="阀值"
@@ -63,7 +63,7 @@
         />
         <q-input
           v-if="thresholdAction === 2"
-          class="col-5"
+          class="col-6"
           dense
           outlined
           label="暂停时间/秒"
@@ -80,7 +80,7 @@
       </div>
     </div>
     <q-separator class="full-width" inset />
-    <div class="row justify-evenly full-width q-ma-md">
+    <div class="row justify-evenly full-width q-ma-sm">
       <div
         class="col-6 row items-center bg-grey-7 text-bold text-white q-px-xs"
       >
@@ -437,6 +437,16 @@ export default defineComponent({
         if (continueSilence.value < 500) {
           continueSilence.value = 500;
         }
+      }
+    });
+
+    watch(thresholdActionTime, (newVal: number | string) => {
+      const val = Number(newVal);
+      if (val < 0) {
+        thresholdActionTime.value = 0;
+      } else {
+        // minimum 10ms periods
+        thresholdActionTime.value = Math.floor(val);
       }
     });
 

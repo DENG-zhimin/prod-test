@@ -149,7 +149,6 @@
 </template>
 <script lang="ts">
 import {
-  ref,
   defineComponent,
   onMounted,
   onBeforeMount,
@@ -180,6 +179,7 @@ export default defineComponent({
     const flashStore = useFlashStore();
     const {
       testFlag,
+      intervalHandler,
       prodName,
       prodModel,
       stopReason,
@@ -206,7 +206,7 @@ export default defineComponent({
 
     const router = useRouter();
 
-    const intervalHandler = ref();
+    // const intervalHandler = ref();
 
     const startReceive = () => {
       // try {

@@ -126,25 +126,21 @@
       <!-- {{ testResult }} -->
       {{ error }}
     </div>
-    <!-- <q-dialog v-model="showExportDialog" persistent pointer-events="all">
+    <q-dialog v-model="showMsg" pointer-events="all">
       <div class="column items-center q-gutter-sm bg-white q-pa-sm">
-        <div class="row items-center q-pa-sm">生成测试报告</div>
-        <q-separator class="full-width" inset></q-separator>
-        <q-input outlined v-model="prodName" label="产品名称(必填)" />
-        <q-input outlined v-model="prodModel" label="型号" />
-        <q-separator class="full-width q-mt-md" inset></q-separator>
-        <div class="row full-width justify-evenly q-pa-sm">
-          <q-btn outline color="primary" label="取消" v-close-popup />
+        <div class="row items-center q-pa-sm">测试中, 不能离开。</div>
+        <div class="q-mt-md">
           <q-btn
+            outline
             unelevated
             color="primary"
-            label="确认"
+            label="知道了"
             type="button"
-            @click="triggerExport()"
+            @click="showMsg = false"
           />
         </div>
       </div>
-    </q-dialog> -->
+    </q-dialog>
   </q-page>
 </template>
 <script lang="ts">
@@ -178,6 +174,7 @@ export default defineComponent({
 
     const flashStore = useFlashStore();
     const {
+      showMsg,
       testFlag,
       intervalHandler,
       prodName,
@@ -306,7 +303,7 @@ export default defineComponent({
     };
     const stopTest = async () => {
       testFlag.value = false;
-      clearInterval(intervalHandler.value);
+      clearInterval(Number(intervalHandler.value));
       setTimeout(() => {
         // stop receive msg after 1000ms
         stopReceive();
@@ -398,6 +395,7 @@ export default defineComponent({
     });
 
     return {
+      showMsg,
       testResult,
       prodName,
       prodModel,

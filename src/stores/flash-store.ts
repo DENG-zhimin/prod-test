@@ -8,7 +8,7 @@ export type FlashFeedback = {
 };
 
 const testFlag = false;
-const intervalHandler = <number>0;
+const intervalHandler = <null | NodeJS.Timeout>null;
 const prodName = ''; // testing product model
 const prodModel = ''; // testing product model
 const stopReason = ''; // as show on Name.
@@ -25,6 +25,7 @@ const threshold = <number | string>1;
 
 export const useFlashStore = defineStore('flash', {
   state: () => ({
+    showMsg: false,
     testFlag,
     intervalHandler,
     prodName,

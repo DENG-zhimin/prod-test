@@ -50,6 +50,7 @@
           :options="thresholdActionOptions"
           map-options
           emit-value
+          @update:model-value="onThresholdActionUpdate"
         />
       </div>
       <div v-if="thresholdAction > 0" class="col-8 row justify-between">
@@ -257,7 +258,7 @@ export default defineComponent({
           };
           testResult.value.unshift(singleFB);
           const ret = parseInt(val); //return numbers
-          threshold.value = parseInt(threshold.value);
+          threshold.value = Number(threshold.value);
           if (ret < threshold.value) {
             switch (thresholdAction.value) {
               // 阀值动作
@@ -270,6 +271,8 @@ export default defineComponent({
                 setTimeout(() => {
                   startTest();
                 }, restTime.value);
+                break;
+              default:
                 break;
             }
           }
@@ -378,6 +381,16 @@ export default defineComponent({
       router.push('/dataAnalysis');
     };
 
+    const onThresholdActionUpdate = function (action: number) {
+      if (action === 0) {
+        threshold.value = 0;
+      } else {
+        if (thresholdActionTime.value === 0) {
+          thresholdActionTime.value = 10;
+        }
+      }
+    };
+
     onBeforeMount(() => {
       if ($q.platform.is.mobile) {
         BleClient.initialize();
@@ -478,6 +491,7 @@ export default defineComponent({
       stopReceive,
       resetParam,
       goAnalysis,
+      onThresholdActionUpdate,
     };
   },
 });

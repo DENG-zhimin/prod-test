@@ -95,8 +95,9 @@ export default defineComponent({
       cycleSilence,
       sendCount,
       receiveCount,
-      enableThreshold,
       threshold,
+      thresholdAction,
+      thresholdActionTime,
     } = storeToRefs(flashStore);
 
     type LineData = {
@@ -233,14 +234,17 @@ export default defineComponent({
         '周期间隔时间（毫秒）,' +
         cycleSilence.value +
         '\n';
-
+      const action = ['无', '停止', '暂停继续'];
       stream +=
         '阀值设置,' +
-        '启用,' +
-        (enableThreshold.value ? '是' : '否') +
+        '触发动作,' +
+        action[thresholdAction.value] +
         ',' +
         '阀值,' +
         threshold.value +
+        ',' +
+        '暂停时间,' +
+        thresholdActionTime.value +
         '\n';
       stream +=
         '次数统计,' +

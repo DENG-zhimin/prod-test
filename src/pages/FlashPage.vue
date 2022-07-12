@@ -5,6 +5,7 @@
     <div class="row justify-evenly q-pa-xs">
       <q-input
         class="col-4"
+        :autofocus="prodName === ''"
         dense
         outlined
         v-model="prodName"

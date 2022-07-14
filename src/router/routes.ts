@@ -15,6 +15,10 @@ const routes: RouteRecordRaw[] = [
         path: 'dataAnalysis',
         component: () => import('src/pages/DataAnalysis.vue'),
       },
+      {
+        path: 'multipleAnalysis',
+        component: () => import('src/pages/MultipleAnalysis.vue'),
+      },
       { path: 'ble', component: () => import('pages/BlePage.vue') },
       {
         path: 'bledev/:devId',

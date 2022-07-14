@@ -38,13 +38,13 @@
       <div
         class="row justify-center full-width q-pa-sm bg-grey-3 q-mb-sm chart"
       >
-        线性表现图
+        线性分析图
         <div id="chart" class="full-width"></div>
       </div>
       <div
         class="row justify-center full-width q-pa-sm bg-grey-3 q-mb-sm chart"
       >
-        分部表现图
+        数值分析图
         <div id="columnPart" class="full-width"></div>
       </div>
       <div class="column justify-center q-mt-sm">

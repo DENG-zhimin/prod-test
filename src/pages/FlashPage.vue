@@ -108,19 +108,36 @@
     <div class="col column q-pa-sm full-width">
       <div
         v-if="testResult.length > 0"
-        class="row items-center justify-end q-pr-md"
+        class="row items-center justify-end q-gutter-x-sm"
       >
         <q-btn
+          class="q-px-sm"
           outline
           color="negative"
           label="重置"
           @click="resetParam()"
         ></q-btn>
         <q-btn
-          class="q-ml-lg"
+          class="q-px-sm"
+          :disable="saveFlag || testFlag"
+          outline
+          color="positive"
+          label="保存"
+          @click="saveData()"
+        ></q-btn>
+        <q-btn
           color="primary"
-          label="数据分析"
+          :disable="testFlag"
+          class="q-px-sm"
+          label="单次分析"
           @click="goAnalysis()"
+        ></q-btn>
+        <q-btn
+          :disable="!saveFlag || testFlag"
+          class="q-px-sm"
+          color="accent"
+          label="综合分析"
+          @click="goMultiple()"
         ></q-btn>
       </div>
       <div
@@ -181,7 +198,11 @@ import { BleClient } from '@capacitor-community/bluetooth-le';
 import { useBleStore, lBleDev } from 'src/stores/ble-store';
 import { formatTime } from 'src/utils/comm';
 import { useRouter } from 'vue-router';
-import { FlashFeedback, useFlashStore } from 'src/stores/flash-store';
+import {
+  TestResult,
+  FlashFeedback,
+  useFlashStore,
+} from 'src/stores/flash-store';
 
 export default defineComponent({
   name: 'FlashTestPage',
@@ -195,8 +216,10 @@ export default defineComponent({
 
     const flashStore = useFlashStore();
     const {
+      cycleId,
       showMsg,
       testFlag,
+      saveFlag,
       thresholdAction,
       thresholdActionTime,
       intervalHandler,
@@ -214,6 +237,7 @@ export default defineComponent({
       threshold,
 
       testResult,
+      testResults,
     } = storeToRefs(flashStore);
 
     const intervalList = <number[]>[];
@@ -303,6 +327,7 @@ export default defineComponent({
         return null;
       }
       testFlag.value = true; // change status flag
+      saveFlag.value = false;
       startReceive(); // start notify receiver
       cycleSend(); // start command sender
     };
@@ -368,10 +393,10 @@ export default defineComponent({
     };
 
     const resetParam = () => {
-      continueSilence.value = 0;
-      continueTimes.value = 1;
-      cycleSilence.value = 1000;
-      threshold.value = 5;
+      // continueSilence.value = 0;
+      // continueTimes.value = 1;
+      // cycleSilence.value = 1000;
+      // threshold.value = 5;
       sendCount.value = 0;
       receiveCount.value = 0;
       testResult.value.length = 0;
@@ -382,6 +407,11 @@ export default defineComponent({
       router.push('/dataAnalysis');
     };
 
+    const goMultiple = () => {
+      // exportReport(); // trigger export
+      router.push('/multipleAnalysis');
+    };
+
     const onThresholdActionUpdate = function (action: number) {
       if (action === 0) {
         threshold.value = 0;
@@ -390,6 +420,27 @@ export default defineComponent({
           thresholdActionTime.value = 10;
         }
       }
+    };
+
+    const saveData = () => {
+      const data = <FlashFeedback[]>(
+        JSON.parse(JSON.stringify(testResult.value))
+      );
+      const res = <TestResult>{
+        cycleId: cycleId.value,
+        prodName: prodName.value,
+        prodModel: prodModel.value,
+        flashTimes: continueTimes.value,
+        flashInterval: continueSilence.value,
+        cycleInterval: cycleSilence.value,
+        commCount: sendCount.value,
+        responseCount: receiveCount.value,
+        data: data,
+      };
+      testResults.value.push(res);
+      testResult.value.length = 0;
+      cycleId.value += 1;
+      saveFlag.value = true;
     };
 
     onBeforeMount(() => {
@@ -479,6 +530,7 @@ export default defineComponent({
       receiveCount,
       startFlag,
       testFlag,
+      saveFlag,
       continueTimes,
       continueSilence,
       cycleSilence,
@@ -492,7 +544,9 @@ export default defineComponent({
       stopReceive,
       resetParam,
       goAnalysis,
+      goMultiple,
       onThresholdActionUpdate,
+      saveData,
     };
   },
 });

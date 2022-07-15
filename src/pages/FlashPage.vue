@@ -107,7 +107,7 @@
     <q-separator class="full-width"></q-separator>
     <div class="col column q-pa-sm full-width">
       <div
-        v-if="testResult.length > 0"
+        v-if="testResult.length > 0 || testResults.length > 0"
         class="row items-center justify-end q-gutter-x-sm"
       >
         <q-btn
@@ -441,6 +441,8 @@ export default defineComponent({
       testResult.value.length = 0;
       cycleId.value += 1;
       saveFlag.value = true;
+      receiveCount.value = 0;
+      sendCount.value = 0;
     };
 
     onBeforeMount(() => {
@@ -518,6 +520,7 @@ export default defineComponent({
     return {
       showMsg,
       testResult,
+      testResults,
       thresholdAction,
       thresholdActionOptions,
       thresholdActionTime,

@@ -4,14 +4,10 @@
       <q-toolbar class="bg-grey-7">
         <!-- <q-toolbar-title></q-toolbar-title> -->
         <div @click.stop="goHome">
-          <img
-            src="~assets/logo.png"
-            alt="AOI"
-            style="width: 80px; cursor: pointer"
-          />
+          <img src="" alt="LOGO" style="width: 80px; cursor: pointer" />
         </div>
         <q-space></q-space>
-        <div class="row justify-center text-bold q-mr-lg">AOI LTD</div>
+        <div class="row justify-center text-bold q-mr-lg">Product Test</div>
         <q-space></q-space>
 
         <div>
